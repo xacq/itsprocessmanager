@@ -26,5 +26,6 @@ procesos@gmail.com
 
 python manage.py runserver
 
+Crear carpeta fixtures y con el archivo process_seed.json 
 
-
+    python manage.py loaddata process_seed
