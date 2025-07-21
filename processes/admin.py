@@ -2,7 +2,30 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from . import models
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.utils.translation import gettext_lazy as _
+from .models import User   # importa tu modelo
 
+@admin.register(User)
+class UserAdmin(BaseUserAdmin):
+    """Admin para el modelo de usuario personalizado."""
+    fieldsets = (
+        (None, {"fields": ("username", "password")}),
+        (_("Información personal"), {"fields": ("first_name", "last_name", "email", "id_number")}),
+        (_("Permisos"), {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        (_("Fechas importantes"), {"fields": ("last_login", "date_joined")}),
+        (_("Rol del sistema"), {"fields": ("role",)}),          #  ← campo extra
+    )
+    add_fieldsets = (
+        (None, {
+            "classes": ("wide",),
+            "fields": ("username", "password1", "password2", "role", "id_number", "is_staff", "is_superuser"),
+        }),
+    )
+    list_display = ("username", "email", "role", "is_staff", "is_active")
+    list_filter = ("role", "is_staff", "is_superuser", "is_active", "groups")
+    search_fields = ("username", "email", "id_number")
+    ordering = ("username",)
 
 # ---------- INLINES ----------
 class SubProcessTemplateInline(admin.TabularInline):
