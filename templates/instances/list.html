@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Instancias{% endblock %}
+{% block content %}
+<h2>Subprocess Instances</h2>
+<table class="table table-sm">
+  <tr><th>ID</th><th>Plantilla</th><th>Estado</th><th>Periodo</th></tr>
+  {% for spi in object_list %}
+    <tr>
+      <td><a href="{% url 'instance-detail' spi.id %}">{{ spi.id }}</a></td>
+      <td>{{ spi.template.name }}</td>
+      <td>{{ spi.state }}</td>
+      <td>{{ spi.period.code }}</td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="4">No hay instancias</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}

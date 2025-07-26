@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Operaciones{% endblock %}
+
+{% block content %}
+<h2>Operaciones asignadas</h2>
+
+<table class="table table-hover align-middle">
+  <thead>
+    <tr>
+      <th>ID</th><th>Subproceso</th><th>Nombre</th><th>Estado</th><th>Deadline</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for op in object_list %}
+      <tr class="{% if op.state == 'LATE' %}table-danger{% elif op.state == 'COMPLETED' %}table-success{% endif %}">
+        <td><a href="{% url 'operation-detail' op.id %}">{{ op.id }}</a></td>
+        <td>{{ op.subprocess_instance }}</td>
+        <td>{{ op.operation_template.name }}</td>
+        <td>{{ op.state }}</td>
+        <td>{{ op.deadline|default:"—" }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">No tienes operaciones asignadas.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if is_paginated %}
+  {% include "pagination.html" %}
+{% endif %}
+{% endblock %}

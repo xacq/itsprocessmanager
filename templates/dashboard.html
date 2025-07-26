@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Panel de control{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Panel de control</h2>
+
+<div class="row g-4">
+  <div class="col-md-4">
+    <div class="card border-primary h-100">
+      <div class="card-body text-center">
+        <h1 class="display-6">{{ unread_count }}</h1>
+        <p class="card-text">Notificaciones sin leer</p>
+        <a class="btn btn-sm btn-outline-primary" href="{% url 'notification-list' %}">Ver</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card border-success h-100">
+      <div class="card-body text-center">
+        {% with completed=completed_count pending=pending_count %}
+          <p>Completadas: {{ completed }} | Pendientes: {{ pending }}</p>
+        {% endwith %}
+        <a class="btn btn-sm btn-outline-success" href="{% url 'instance-list' %}">Ir a Instancias</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card border-danger h-100">
+      <div class="card-body text-center">
+      {% with late=late_count %}
+        <h1 class="display-6">{{ late }}</h1>
+        <p class="card-text">Operaciones atrasadas</p>
+      {% endwith %}
+        <a class="btn btn-sm btn-outline-danger" href="{% url 'instance-list' %}?state=LATE">Filtrar</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-import os
+import os, pathlib
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,10 +39,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    "django.contrib.humanize",
     "processes",
     "django_cron",
     "rest_framework",
     "drf_spectacular",
+    "crispy_forms",
+    "crispy_bootstrap5",
 ]
 
 MIDDLEWARE = [
@@ -83,6 +86,12 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "0.1",
 }
 
+CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
+CRISPY_TEMPLATE_PACK = "bootstrap5"
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "dashboard"
+
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
@@ -93,6 +102,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 load_dotenv()                       # lee variables de .env
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
 
 DATABASES = {
     "default": {
@@ -151,3 +162,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+TEMPLATES[0]["DIRS"] = [BASE_DIR / "templates"]

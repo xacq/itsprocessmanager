@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h3>Operación {{ object.order }} — {{ object.operation_template.name }}</h3>
+<p>Estado: <b>{{ object.state }}</b> | Deadline: {{ object.deadline }}</p>
+
+<h4>Asignaciones propias</h4>
+<form method="post">{% csrf_token %}
+  {{ form|crispy }}
+</form>
+
+<h4>Subir documento</h4>
+<form method="post" enctype="multipart/form-data">{% csrf_token %}
+  {{ upload_form|crispy }}
+</form>
+
+<h4>Documentos</h4>
+<ul>{% for doc in object.documents.all %}<li>{{ doc.file.name }}</li>{% endfor %}</ul>
+{% endblock %}

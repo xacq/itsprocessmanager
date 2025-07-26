@@ -11,6 +11,7 @@ pip install --upgrade pip
 pip install django==4.2 mysqlclient python-dotenv
 pip install djangorestframework django-cron
 pip install djangorestframework drf-spectacular drf-spectacular-sidecar //API REST
+pip install django-crispy-forms crispy-bootstrap5  //UI Boostrap
 
 django-admin startproject config .
 python manage.py startapp processes
@@ -46,16 +47,22 @@ Dentro de cada ámbito padre el sufijo debe ser único, pero empezar todo en 0
 Comando CLI instantiate_spi
     processes/management/commands/instantiate_spi.py
 
+Asignar rol al super‑usuario ejecuta la primera instruccion que esta a continuacion, y luego ejecuta cada instruccion una por una,
+luego despues de ejecutar con enter la u.save(), aplastar Ctrl + Z para salir del Shell de python
+
+python manage.py shell
+
+>>> from django.contrib.auth import get_user_model
+>>> u = get_user_model().objects.get(username="procesos")
+>>> u.role = "ADMIN"; u.is_staff = True
+>>> u.save()
+
 Migraciones y prueba rápida
 
 python manage.py makemigrations
 python manage.py migrate
 
-# crea algún Career, AcademicPeriod y SubProcessTemplate con OperationTemplates
-python manage.py instantiate_spi <tpl_id> <career_id> <period_id> <gestor_id>
-
-# comprueba operaciones creadas
-python manage.py shell -c "from processes.models import SubProcessInstance as S; print(S.objects.last().operation_instances.all())"
-
-# simula cron (opcional)
-python manage.py runcrons
+Ejecutar para ver el IST Process Manager API
+http://127.0.0.1:8000/api/
+http://127.0.0.1:8000/api/docs/
+http://127.0.0.1:8000/api/?format=json
