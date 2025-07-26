@@ -1,3 +1,4 @@
+*************************PRIMERA ENTREGA*************************
 A) Crea la carpeta de trabajo
 mkdir C:\Proyectos\ist_process_manager
 cd C:\Proyectos\ist_process_manager
@@ -9,9 +10,6 @@ python -m venv venv
 PAQUETES A INSTALAR
 pip install --upgrade pip
 pip install django==4.2 mysqlclient python-dotenv
-pip install djangorestframework django-cron
-pip install djangorestframework drf-spectacular drf-spectacular-sidecar //API REST
-pip install django-crispy-forms crispy-bootstrap5  //UI Boostrap
 
 django-admin startproject config .
 python manage.py startapp processes
@@ -44,6 +42,12 @@ MacroProcess         → 001   → 001.001
 Process              → 001   → 001.001.001
 Dentro de cada ámbito padre el sufijo debe ser único, pero empezar todo en 001 es totalmente válido para la primera rama.
 
+*************************SEGUNDA ENTREGA*************************
+
+PAQUETES A INSTALAR
+pip install djangorestframework drf-spectacular drf-spectacular-sidecar //API REST
+pip install django-crispy-forms crispy-bootstrap5  //UI Boostrap
+
 Comando CLI instantiate_spi
     processes/management/commands/instantiate_spi.py
 
@@ -63,6 +67,11 @@ python manage.py makemigrations
 python manage.py migrate
 
 Ejecutar para ver el IST Process Manager API
+
 http://127.0.0.1:8000/api/
+
 http://127.0.0.1:8000/api/docs/
+
 http://127.0.0.1:8000/api/?format=json
+
+http://127.0.0.1:8000/dashboard
