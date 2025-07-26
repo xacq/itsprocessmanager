@@ -1,8 +1,8 @@
-# 1 A) Crea la carpeta de trabajo
+A) Crea la carpeta de trabajo
 mkdir C:\Proyectos\ist_process_manager
 cd C:\Proyectos\ist_process_manager
 
-# 1 B) Crea y activa un entorno virtual
+B) Crea y activa un entorno virtual
 python -m venv venv
 .\venv\Scripts\activate 
 
@@ -10,6 +10,7 @@ PAQUETES A INSTALAR
 pip install --upgrade pip
 pip install django==4.2 mysqlclient python-dotenv
 pip install djangorestframework django-cron
+pip install djangorestframework drf-spectacular drf-spectacular-sidecar //API REST
 
 django-admin startproject config .
 python manage.py startapp processes
