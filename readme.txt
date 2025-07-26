@@ -42,3 +42,19 @@ MacroProcess         → 001   → 001.001
 Process              → 001   → 001.001.001
 Dentro de cada ámbito padre el sufijo debe ser único, pero empezar todo en 001 es totalmente válido para la primera rama.
 
+Comando CLI instantiate_spi
+    processes/management/commands/instantiate_spi.py
+
+Migraciones y prueba rápida
+
+python manage.py makemigrations
+python manage.py migrate
+
+# crea algún Career, AcademicPeriod y SubProcessTemplate con OperationTemplates
+python manage.py instantiate_spi <tpl_id> <career_id> <period_id> <gestor_id>
+
+# comprueba operaciones creadas
+python manage.py shell -c "from processes.models import SubProcessInstance as S; print(S.objects.last().operation_instances.all())"
+
+# simula cron (opcional)
+python manage.py runcrons
