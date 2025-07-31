@@ -112,7 +112,8 @@ y en el admin aparecerá la nueva SubProcess instance con sus tres operaciones y
 
 VER IMAGEN Imagen de la primer instanciación.png en carpeta evidencias
 
-
+Ruta para Iniciar "Planificacion PPP"
+http://127.0.0.1:8000/templates/1/start/
 
 
 

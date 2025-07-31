@@ -164,3 +164,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 TEMPLATES[0]["DIRS"] = [BASE_DIR / "templates"]
+
+from django.contrib.messages import constants as msg
+MESSAGE_TAGS = { msg.SUCCESS: "alert-success", msg.ERROR: "alert-danger" }
+
+

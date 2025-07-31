@@ -1,0 +1,129 @@
+[
+  {
+    "model": "processes.processinstitution",
+    "pk": 1,
+    "fields": {
+      "code": "001",
+      "name": "Procesos Académicos",
+      "description": "",
+      "created_at": "2025-07-21T00:00:00Z",
+      "updated_at": "2025-07-21T00:00:00Z"
+    }
+  },
+  {
+    "model": "processes.macroprocess",
+    "pk": 1,
+    "fields": {
+      "process_institution": 1,
+      "code_suffix": "001",
+      "name": "Formación Profesional",
+      "description": "",
+      "created_at": "2025-07-21T00:00:00Z",
+      "updated_at": "2025-07-21T00:00:00Z"
+    }
+  },
+  {
+    "model": "processes.process",
+    "pk": 1,
+    "fields": {
+      "macro_process": 1,
+      "code_suffix": "001",
+      "name": "Prácticas Pre-Profesionales",
+      "description": "",
+      "manager": 2,
+      "created_at": "2025-07-21T00:00:00Z",
+      "updated_at": "2025-07-21T23:52:36Z"
+    }
+  },
+  {
+    "model": "processes.subprocesstemplate",
+    "pk": 1,
+    "fields": {
+      "process": 1,
+      "name": "Planificación PPP",
+      "description": "Varios",
+      "created_by": 1,
+      "created_at": "2025-07-21T23:52:36Z",
+      "updated_at": "2025-07-21T23:52:36Z"
+    }
+  },
+  { "model": "processes.storagetype", "pk": 1,
+    "fields": {
+      "subprocess_template": 1,
+      "name": "Cronograma",
+      "permanent": true,
+      "created_at": "2025-07-31T20:29:46Z",
+      "updated_at": "2025-07-31T20:29:46Z"
+    }
+  },
+  { "model": "processes.storagetype", "pk": 2,
+    "fields": {
+      "subprocess_template": 1,
+      "name": "Cartas",
+      "permanent": true,
+      "created_at": "2025-07-31T20:29:57Z",
+      "updated_at": "2025-07-31T20:29:57Z"
+    }
+  },
+  { "model": "processes.storagetype", "pk": 3,
+    "fields": {
+      "subprocess_template": 1,
+      "name": "Informe",
+      "permanent": true,
+      "created_at": "2025-07-31T20:30:08Z",
+      "updated_at": "2025-07-31T20:30:08Z"
+    }
+  },
+  { "model": "processes.operationtemplate", "pk": 1,
+    "fields": {
+      "subprocess_template": 1,
+      "name": "Crear cronograma",
+      "type": "COMPLETE",
+      "order": 1,
+      "deadline_days": 7,
+      "storage_type": null,
+      "requires_approval": false
+    }
+  },
+  { "model": "processes.operationtemplate", "pk": 2,
+    "fields": {
+      "subprocess_template": 1,
+      "name": "Subir carta compromiso",
+      "type": "DOC_REQUEST",
+      "order": 2,
+      "deadline_days": 14,
+      "storage_type": 2,
+      "requires_approval": false
+    }
+  },
+  { "model": "processes.operationtemplate", "pk": 3,
+    "fields": {
+      "subprocess_template": 1,
+      "name": "Aprobar carta compromiso",
+      "type": "REVIEW",
+      "order": 3,
+      "deadline_days": 3,
+      "storage_type": 2,
+      "requires_approval": true
+    }
+  },
+  {
+    "model": "processes.career",
+    "pk": 1,
+    "fields": { "name": "Tecnología en Redes" }
+  },
+  {
+    "model": "processes.career",
+    "pk": 2,
+    "fields": { "name": "Contabilidad" }
+  },
+  {
+    "model": "processes.academicperiod",
+    "pk": 1,
+    "fields": {
+      "code": "2025-1",
+      "start_date": "2025-05-01",
+      "end_date": "2025-09-30"
+    }
+  }
+]

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}       {# ← añade esta línea justo después de extends #}
+
+{% block title %}Iniciar subproceso{% endblock %}
+
+{% block content %}
+<h3>Iniciar “{{ template_obj.name }}”</h3>
+<form method="post">{% csrf_token %}
+  {{ form|crispy }}
+  <button class="btn btn-primary">Crear instancia</button>
+</form>
+{% endblock %}

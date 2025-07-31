@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Instancia #{{ object.id }}{% endblock %}
+{% block content %}
+<h2>Instancia #{{ object.id }} – {{ object.template.name }}</h2>
+<p>
+  Carrera: {{ object.career.name }} |
+  Periodo: {{ object.period.code }} |
+  Estado:
+  <span class="badge bg-info">{{ object.state }}</span>
+</p>
+
+<table class="table table-sm">
+  <thead><tr><th>#</th><th>Operación</th><th>Estado</th><th>Deadline</th><th></th></tr></thead>
+  <tbody>
+  {% for op in object.operation_instances.all %}
+    <tr class="{% if op.state == 'LATE' %}table-danger{% elif op.state == 'COMPLETED' %}table-success{% endif %}">
+      <td>{{ op.order }}</td>
+      <td>{{ op.operation_template.name }}</td>
+      <td>{{ op.state }}</td>
+      <td>{{ op.deadline|date:"d/m/Y" }}</td>
+      <td><a href="{% url 'operation-detail' op.id %}" class="btn btn-sm btn-outline-primary">Abrir</a></td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="5">No hay operaciones.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+<a href="{% url 'instance-list' %}" class="btn btn-secondary">Volver</a>
+{% endblock %}

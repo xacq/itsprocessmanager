@@ -1,7 +1,7 @@
 from django import forms
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit
-from .models import Document
+from .models import AcademicPeriod, Career, Document
 
 class OperationCompleteForm(forms.Form):
     confirm = forms.BooleanField(label="Marcar como completada")
@@ -22,3 +22,9 @@ class DocumentUploadForm(forms.ModelForm):
         self.helper = FormHelper()
         self.helper.form_method = "post"
         self.helper.add_input(Submit("submit", "Subir archivo"))
+
+
+class SubProcessStartForm(forms.Form):
+    career = forms.ModelChoiceField(queryset=Career.objects.all(), label="Carrera")
+    period = forms.ModelChoiceField(queryset=AcademicPeriod.objects.all(), label="Período académico")
+

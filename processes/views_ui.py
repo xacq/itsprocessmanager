@@ -1,11 +1,15 @@
+# processes/views_ui.py
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
+from django.contrib import messages
 
-from .models import SubProcessInstance, OperationInstance, Notification
-from .forms import OperationCompleteForm, DocumentUploadForm
+from processes.services import instantiate_subprocess
+
+from .models import SubProcessInstance, OperationInstance, Notification, SubProcessTemplate, User
+from .forms import OperationCompleteForm, DocumentUploadForm, SubProcessStartForm
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard.html"
@@ -34,6 +38,8 @@ class InstanceListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = super().get_queryset().select_related("template", "career", "period")
+        if self.request.user.role == User.Role.ADMIN:
+            return qs
         if self.request.user.role == "MANAGER":
             qs = qs.filter(template__process__manager=self.request.user)
         else:
@@ -43,14 +49,6 @@ class InstanceListView(LoginRequiredMixin, ListView):
         if state:
             qs = qs.filter(operation_instances__state=state).distinct()
         return qs
-
-
-class InstanceDetailView(LoginRequiredMixin, DetailView):
-    model = SubProcessInstance
-    template_name = "instances/detail.html"
-
-    def get_queryset(self):
-        return super().get_queryset().prefetch_related("operation_instances__assignments")
 
 
 # ---------- Operaciones ----------
@@ -105,3 +103,51 @@ class NotificationListView(LoginRequiredMixin, ListView):
             Notification.objects.filter(id=notif_id, user=request.user)\
                                   .update(is_read=True)
         return redirect(request.path)      # recarga la página
+    
+
+class SubProcessTemplateStartView(LoginRequiredMixin, FormView):
+    template_name = "templates/start.html"
+    form_class = SubProcessStartForm  # carrera + periodo
+    def form_valid(self, form):
+        tpl = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        spi = instantiate_subprocess(tpl, form.cleaned_data["career"],
+                                          form.cleaned_data["period"],
+                                          self.request.user)
+        return redirect("instance-detail", spi.pk)
+
+
+class StartView(LoginRequiredMixin, FormView):
+    template_name = "templates/start.html"
+    form_class = SubProcessStartForm
+
+    def form_valid(self, form):
+        tpl = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        spi = instantiate_subprocess(
+            tpl,
+            form.cleaned_data["career"],
+            form.cleaned_data["period"],
+            self.request.user,
+        )
+        messages.success(self.request, f"Subproceso #{spi.pk} creado.")
+        return redirect("instance-detail", spi.pk)
+    
+
+class InstanceDetailView(LoginRequiredMixin, DetailView):
+    model = SubProcessInstance
+    template_name = "instances/detail.html"
+
+    def get_queryset(self):
+        qs = super().get_queryset().prefetch_related(
+            "operation_instances__assignments",
+            "operation_instances__documents",
+        )
+
+        user = self.request.user
+        # 1) Admin ve todo
+        if user.role == User.Role.ADMIN:
+            return qs
+        # 2) Gestor ve los suyos
+        if user.role == User.Role.MANAGER:
+            return qs.filter(template__process__manager=user)
+        # 3) Participante ve donde está asignado
+        return qs.filter(operation_instances__assignments__user=user).distinct()
