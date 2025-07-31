@@ -1,6 +1,7 @@
 # processes/services.py
 from django.utils import timezone
 from django.db import transaction
+
 from .models import (
     SubProcessTemplate, SubProcessInstance,
     OperationInstance, OperationAssignment,
@@ -24,6 +25,7 @@ def instantiate_subprocess(template: SubProcessTemplate,
     )
 
     for ot in template.operation_templates.all():
+        # calcula deadline
         deadline = (timezone.now().date() + timezone.timedelta(days=ot.deadline_days)
                     if ot.deadline_days else None)
 
