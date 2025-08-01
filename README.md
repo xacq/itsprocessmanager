@@ -77,41 +77,7 @@ PAQUETES A INSTALAR
 pip install django-cron
 pip install djangorestframework-simplejwt
 
-Ejecuta el shell de python 
-
-python manage.py shell
-
-y codifica lo siguiente
-
-from processes.models import Career, AcademicPeriod
-Career.objects.get_or_create(name="Tecnología en Redes")
-AcademicPeriod.objects.get_or_create(code="2025-1", start_date="2025-05-01", end_date="2025-09-30")
-
-sales con Ctrl + Z
-
-Si necesitas confirmar los IDs en la consola:
-python manage.py shell -c "from processes.models import SubProcessTemplate, Career, AcademicPeriod, User; print(SubProcessTemplate.objects.values('id','name')); print(Career.objects.values('id','name')); print(AcademicPeriod.objects.values('id','code')); print(User.objects.filter(role='MANAGER').values('id','username'))"
-<QuerySet [{'id': 1, 'name': 'Planificación PPP'}]>
-<QuerySet [{'id': 1, 'name': 'Tecnología en Redes'}]>
-<QuerySet [{'id': 1, 'code': '2025-1'}]>
-<QuerySet [{'id': 2, 'username': 'gestor'}]>
-
-Ejecuta la instanciación
-(venv) PS C:\ist_process_manager> python manage.py instantiate_spi 1 1 1 2
-
-Orden de argumentos →
-<template_id> <career_id> <period_id> <gestor_id>
-Si todo está en su sitio verás algo como:
-
-SPI creado: 1
-
-y en el admin aparecerá la nueva SubProcess instance con sus tres operaciones y deadlines. (esto ya esta realizado)
-
 VER IMAGEN Imagen de la primer instanciación.png en carpeta evidencias
-
-Ruta para Iniciar "Planificacion PPP"
-http://127.0.0.1:8000/templates/1/start/
-
 
 USAURIOS ACTUALES
     SUPERUSERq      
