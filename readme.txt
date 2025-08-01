@@ -21,10 +21,6 @@ Luego de generar los modelos
 python manage.py makemigrations          # genera migraciones para processes
 python manage.py migrate                 # crea tablas en MySQL
 python manage.py createsuperuser         # sigue el asistente
-SUPERUSER
-procesos
-procesos@gmail.com
-123Qwerty$%^
 
 python manage.py runserver
 
@@ -118,13 +114,14 @@ http://127.0.0.1:8000/templates/1/start/
 
 
 USAURIOS ACTUALES
-
+    SUPERUSERq      
     username="admin",
-    password="Admin123!",
+    password="123Qwerty$%^",
+    role=User.Role.ADMIN
 
     username="gestor",
-    password="123Qwerty$%^"
+    password="Gestor123!",   
+    role=User.Role.MANAGER,
 
-    username="alumno",
-    password="Alumno123!",
+
 

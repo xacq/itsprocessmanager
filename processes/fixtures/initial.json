@@ -3,78 +3,223 @@
     "model": "processes.processinstitution",
     "pk": 1,
     "fields": {
+      "created_at": "2025-07-21T00:00:00Z",
+      "updated_at": "2025-07-21T00:00:00Z",
       "code": "001",
       "name": "Procesos Académicos",
-      "description": "",
-      "created_at": "2025-07-21T00:00:00Z",
-      "updated_at": "2025-07-21T00:00:00Z"
+      "description": ""
     }
   },
   {
     "model": "processes.macroprocess",
     "pk": 1,
     "fields": {
+      "created_at": "2025-07-21T00:00:00Z",
+      "updated_at": "2025-07-21T00:00:00Z",
       "process_institution": 1,
       "code_suffix": "001",
       "name": "Formación Profesional",
-      "description": "",
-      "created_at": "2025-07-21T00:00:00Z",
-      "updated_at": "2025-07-21T00:00:00Z"
+      "description": ""
     }
   },
   {
     "model": "processes.process",
     "pk": 1,
     "fields": {
+      "created_at": "2025-07-21T00:00:00Z",
+      "updated_at": "2025-07-21T23:52:36Z",
       "macro_process": 1,
       "code_suffix": "001",
       "name": "Prácticas Pre-Profesionales",
       "description": "",
-      "manager": 2,
-      "created_at": "2025-07-21T00:00:00Z",
-      "updated_at": "2025-07-21T23:52:36Z"
+      "manager": 2
     }
   },
   {
     "model": "processes.subprocesstemplate",
     "pk": 1,
     "fields": {
+      "created_at": "2025-07-21T23:52:36Z",
+      "updated_at": "2025-07-21T23:52:36Z",
       "process": 1,
       "name": "Planificación PPP",
       "description": "Varios",
-      "created_by": 1,
-      "created_at": "2025-07-21T23:52:36Z",
-      "updated_at": "2025-07-21T23:52:36Z"
+      "created_by": 1
     }
   },
-  { "model": "processes.storagetype", "pk": 1,
+  {
+    "model": "processes.subprocesstemplate",
+    "pk": 2,
     "fields": {
+      "created_at": "2025-07-31T21:05:44.400Z",
+      "updated_at": "2025-08-01T01:29:08.612Z",
+      "process": 1,
+      "name": "Planificación PPP",
+      "description": "",
+      "created_by": 2
+    }
+  },
+  {
+    "model": "processes.subprocesstemplate",
+    "pk": 3,
+    "fields": {
+      "created_at": "2025-08-01T01:29:44.849Z",
+      "updated_at": "2025-08-01T01:29:44.849Z",
+      "process": 1,
+      "name": "Ejecución PPP",
+      "description": "",
+      "created_by": 2
+    }
+  },
+  {
+    "model": "processes.subprocesstemplate",
+    "pk": 4,
+    "fields": {
+      "created_at": "2025-08-01T01:30:12.110Z",
+      "updated_at": "2025-08-01T01:30:12.110Z",
+      "process": 1,
+      "name": "Informe Final PPP",
+      "description": "",
+      "created_by": 2
+    }
+  },
+  {
+    "model": "processes.subprocesstemplate",
+    "pk": 5,
+    "fields": {
+      "created_at": "2025-08-01T01:30:30.206Z",
+      "updated_at": "2025-08-01T01:30:30.206Z",
+      "process": 1,
+      "name": "Certificado PPP",
+      "description": "",
+      "created_by": 2
+    }
+  },
+  {
+    "model": "processes.subprocesstemplate",
+    "pk": 6,
+    "fields": {
+      "created_at": "2025-08-01T01:30:46.608Z",
+      "updated_at": "2025-08-01T01:30:46.608Z",
+      "process": 1,
+      "name": "Servicio Comunitario",
+      "description": "",
+      "created_by": 2
+    }
+  },
+  {
+    "model": "processes.storagetype",
+    "pk": 1,
+    "fields": {
+      "created_at": "2025-07-31T20:29:46Z",
+      "updated_at": "2025-07-31T20:29:46Z",
       "subprocess_template": 1,
       "name": "Cronograma",
-      "permanent": true,
-      "created_at": "2025-07-31T20:29:46Z",
-      "updated_at": "2025-07-31T20:29:46Z"
+      "permanent": true
     }
   },
-  { "model": "processes.storagetype", "pk": 2,
+  {
+    "model": "processes.storagetype",
+    "pk": 2,
     "fields": {
+      "created_at": "2025-07-31T20:29:57Z",
+      "updated_at": "2025-07-31T20:29:57Z",
       "subprocess_template": 1,
       "name": "Cartas",
-      "permanent": true,
-      "created_at": "2025-07-31T20:29:57Z",
-      "updated_at": "2025-07-31T20:29:57Z"
+      "permanent": true
     }
   },
-  { "model": "processes.storagetype", "pk": 3,
+  {
+    "model": "processes.storagetype",
+    "pk": 3,
     "fields": {
+      "created_at": "2025-07-31T20:30:08Z",
+      "updated_at": "2025-07-31T20:30:08Z",
       "subprocess_template": 1,
       "name": "Informe",
-      "permanent": true,
-      "created_at": "2025-07-31T20:30:08Z",
-      "updated_at": "2025-07-31T20:30:08Z"
+      "permanent": true
     }
   },
-  { "model": "processes.operationtemplate", "pk": 1,
+  {
+    "model": "processes.storagetype",
+    "pk": 4,
+    "fields": {
+      "created_at": "2025-08-01T01:33:18.426Z",
+      "updated_at": "2025-08-01T01:33:18.426Z",
+      "subprocess_template": 3,
+      "name": "Evidencia PPP",
+      "permanent": true
+    }
+  },
+  {
+    "model": "processes.storagetype",
+    "pk": 5,
+    "fields": {
+      "created_at": "2025-08-01T01:33:38.717Z",
+      "updated_at": "2025-08-01T01:33:38.717Z",
+      "subprocess_template": 4,
+      "name": "Informe PPP",
+      "permanent": true
+    }
+  },
+  {
+    "model": "processes.storagetype",
+    "pk": 6,
+    "fields": {
+      "created_at": "2025-08-01T01:33:55.341Z",
+      "updated_at": "2025-08-01T01:33:55.341Z",
+      "subprocess_template": 4,
+      "name": "Informe Firmado",
+      "permanent": true
+    }
+  },
+  {
+    "model": "processes.storagetype",
+    "pk": 7,
+    "fields": {
+      "created_at": "2025-08-01T01:34:13.267Z",
+      "updated_at": "2025-08-01T01:34:13.267Z",
+      "subprocess_template": 5,
+      "name": "Certificado PPP",
+      "permanent": true
+    }
+  },
+  {
+    "model": "processes.storagetype",
+    "pk": 8,
+    "fields": {
+      "created_at": "2025-08-01T01:34:27.563Z",
+      "updated_at": "2025-08-01T01:34:27.563Z",
+      "subprocess_template": 6,
+      "name": "Evidencia SC",
+      "permanent": true
+    }
+  },
+  {
+    "model": "processes.storagetype",
+    "pk": 9,
+    "fields": {
+      "created_at": "2025-08-01T01:34:41.104Z",
+      "updated_at": "2025-08-01T01:34:41.104Z",
+      "subprocess_template": 6,
+      "name": "Informe SC",
+      "permanent": true
+    }
+  },
+  {
+    "model": "processes.storagetype",
+    "pk": 10,
+    "fields": {
+      "created_at": "2025-08-01T01:34:50.557Z",
+      "updated_at": "2025-08-01T01:34:50.557Z",
+      "subprocess_template": 6,
+      "name": "Certificado SC",
+      "permanent": true
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 1,
     "fields": {
       "subprocess_template": 1,
       "name": "Crear cronograma",
@@ -85,7 +230,9 @@
       "requires_approval": false
     }
   },
-  { "model": "processes.operationtemplate", "pk": 2,
+  {
+    "model": "processes.operationtemplate",
+    "pk": 2,
     "fields": {
       "subprocess_template": 1,
       "name": "Subir carta compromiso",
@@ -96,7 +243,9 @@
       "requires_approval": false
     }
   },
-  { "model": "processes.operationtemplate", "pk": 3,
+  {
+    "model": "processes.operationtemplate",
+    "pk": 3,
     "fields": {
       "subprocess_template": 1,
       "name": "Aprobar carta compromiso",
@@ -108,14 +257,560 @@
     }
   },
   {
+    "model": "processes.operationtemplate",
+    "pk": 4,
+    "fields": {
+      "subprocess_template": 3,
+      "name": "Plan de actividades aprobado",
+      "type": "COMPLETE",
+      "order": 1,
+      "deadline_days": 7,
+      "storage_type": null,
+      "requires_approval": false
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 5,
+    "fields": {
+      "subprocess_template": 3,
+      "name": "Cargar evidencia semanal",
+      "type": "DOC_REQUEST",
+      "order": 2,
+      "deadline_days": 7,
+      "storage_type": 4,
+      "requires_approval": false
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 6,
+    "fields": {
+      "subprocess_template": 3,
+      "name": "Validar evidencia",
+      "type": "REVIEW",
+      "order": 3,
+      "deadline_days": 7,
+      "storage_type": 4,
+      "requires_approval": true
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 7,
+    "fields": {
+      "subprocess_template": 3,
+      "name": "Registrar horas completadas",
+      "type": "COMPLETE",
+      "order": 4,
+      "deadline_days": 0,
+      "storage_type": null,
+      "requires_approval": false
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 8,
+    "fields": {
+      "subprocess_template": 4,
+      "name": "Cargar informe final",
+      "type": "DOC_REQUEST",
+      "order": 1,
+      "deadline_days": 5,
+      "storage_type": 5,
+      "requires_approval": false
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 9,
+    "fields": {
+      "subprocess_template": 4,
+      "name": "Revisión del tutor",
+      "type": "REVIEW",
+      "order": 2,
+      "deadline_days": 5,
+      "storage_type": 5,
+      "requires_approval": true
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 10,
+    "fields": {
+      "subprocess_template": 4,
+      "name": "Subir versión firmada",
+      "type": "DOC_REQUEST",
+      "order": 3,
+      "deadline_days": 3,
+      "storage_type": 6,
+      "requires_approval": false
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 11,
+    "fields": {
+      "subprocess_template": 5,
+      "name": "Solicitar certificado",
+      "type": "CERT_REQUEST",
+      "order": 1,
+      "deadline_days": 0,
+      "storage_type": 7,
+      "requires_approval": false
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 12,
+    "fields": {
+      "subprocess_template": 6,
+      "name": "Plan de proyecto aprobado",
+      "type": "COMPLETE",
+      "order": 1,
+      "deadline_days": 7,
+      "storage_type": null,
+      "requires_approval": false
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 13,
+    "fields": {
+      "subprocess_template": 6,
+      "name": "Subir evidencia SC",
+      "type": "DOC_REQUEST",
+      "order": 2,
+      "deadline_days": 14,
+      "storage_type": 8,
+      "requires_approval": false
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 14,
+    "fields": {
+      "subprocess_template": 6,
+      "name": "Aprobar evidencia SC",
+      "type": "REVIEW",
+      "order": 3,
+      "deadline_days": 7,
+      "storage_type": 8,
+      "requires_approval": true
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 15,
+    "fields": {
+      "subprocess_template": 6,
+      "name": "Cargar informe SC",
+      "type": "DOC_REQUEST",
+      "order": 4,
+      "deadline_days": 5,
+      "storage_type": 9,
+      "requires_approval": false
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 16,
+    "fields": {
+      "subprocess_template": 6,
+      "name": "Aprobar informe SC",
+      "type": "REVIEW",
+      "order": 5,
+      "deadline_days": 5,
+      "storage_type": 9,
+      "requires_approval": true
+    }
+  },
+  {
+    "model": "processes.operationtemplate",
+    "pk": 17,
+    "fields": {
+      "subprocess_template": 6,
+      "name": "Generar certificado SC",
+      "type": "CERT_REQUEST",
+      "order": 6,
+      "deadline_days": 0,
+      "storage_type": 10,
+      "requires_approval": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 1,
+    "fields": {
+      "operation_template": 5,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 2,
+    "fields": {
+      "operation_template": 5,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 3,
+    "fields": {
+      "operation_template": 1,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 4,
+    "fields": {
+      "operation_template": 1,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 5,
+    "fields": {
+      "operation_template": 2,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 6,
+    "fields": {
+      "operation_template": 2,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 7,
+    "fields": {
+      "operation_template": 3,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 8,
+    "fields": {
+      "operation_template": 3,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 9,
+    "fields": {
+      "operation_template": 4,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 10,
+    "fields": {
+      "operation_template": 4,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 11,
+    "fields": {
+      "operation_template": 5,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 12,
+    "fields": {
+      "operation_template": 5,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 13,
+    "fields": {
+      "operation_template": 6,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 14,
+    "fields": {
+      "operation_template": 6,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 15,
+    "fields": {
+      "operation_template": 7,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 16,
+    "fields": {
+      "operation_template": 7,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 17,
+    "fields": {
+      "operation_template": 8,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 18,
+    "fields": {
+      "operation_template": 8,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 19,
+    "fields": {
+      "operation_template": 9,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 20,
+    "fields": {
+      "operation_template": 9,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 21,
+    "fields": {
+      "operation_template": 10,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 22,
+    "fields": {
+      "operation_template": 10,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 23,
+    "fields": {
+      "operation_template": 11,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 24,
+    "fields": {
+      "operation_template": 11,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 25,
+    "fields": {
+      "operation_template": 12,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 26,
+    "fields": {
+      "operation_template": 12,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 27,
+    "fields": {
+      "operation_template": 13,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 28,
+    "fields": {
+      "operation_template": 13,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 29,
+    "fields": {
+      "operation_template": 14,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 30,
+    "fields": {
+      "operation_template": 14,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 31,
+    "fields": {
+      "operation_template": 15,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 32,
+    "fields": {
+      "operation_template": 15,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 33,
+    "fields": {
+      "operation_template": 16,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 34,
+    "fields": {
+      "operation_template": 16,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 35,
+    "fields": {
+      "operation_template": 17,
+      "role": "PARTICIPANT",
+      "is_emitter": true,
+      "is_receiver": false
+    }
+  },
+  {
+    "model": "processes.operationactortemplate",
+    "pk": 36,
+    "fields": {
+      "operation_template": 17,
+      "role": "MANAGER",
+      "is_emitter": false,
+      "is_receiver": true
+    }
+  },
+  {
     "model": "processes.career",
     "pk": 1,
-    "fields": { "name": "Tecnología en Redes" }
+    "fields": {
+      "name": "Tecnología en Redes"
+    }
   },
   {
     "model": "processes.career",
     "pk": 2,
-    "fields": { "name": "Contabilidad" }
+    "fields": {
+      "name": "Contabilidad"
+    }
   },
   {
     "model": "processes.academicperiod",
