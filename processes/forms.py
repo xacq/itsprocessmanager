@@ -10,7 +10,8 @@ class OperationCompleteForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.helper = FormHelper()
         self.helper.form_method = "post"
-        self.helper.add_input(Submit("submit", "Confirmar"))
+        #  ----- cambia label -> value para distinguir -----
+        self.helper.add_input(Submit("complete", "Completar"))
 
 class DocumentUploadForm(forms.ModelForm):
     class Meta:

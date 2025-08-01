@@ -79,6 +79,7 @@ http://127.0.0.1:8000/dashboard
 *************************TERCERA ENTREGA*************************
 PAQUETES A INSTALAR
 pip install django-cron
+pip install djangorestframework-simplejwt
 
 Ejecuta el shell de python 
 
@@ -116,5 +117,14 @@ Ruta para Iniciar "Planificacion PPP"
 http://127.0.0.1:8000/templates/1/start/
 
 
+USAURIOS ACTUALES
 
+    username="admin",
+    password="Admin123!",
+
+    username="gestor",
+    password="123Qwerty$%^"
+
+    username="alumno",
+    password="Alumno123!",
 

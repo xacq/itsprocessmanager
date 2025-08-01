@@ -168,4 +168,13 @@ TEMPLATES[0]["DIRS"] = [BASE_DIR / "templates"]
 from django.contrib.messages import constants as msg
 MESSAGE_TAGS = { msg.SUCCESS: "alert-success", msg.ERROR: "alert-danger" }
 
+INSTALLED_APPS += ["rest_framework_simplejwt"]
 
+REST_FRAMEWORK.update({
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+})

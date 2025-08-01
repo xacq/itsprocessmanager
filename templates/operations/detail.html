@@ -1,19 +1,95 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %} 
+{% load crispy_forms_tags humanize extras %}
+
+{% block title %}Operación #{{ object.order }}{% endblock %}
+
 {% block content %}
-<h3>Operación {{ object.order }} — {{ object.operation_template.name }}</h3>
-<p>Estado: <b>{{ object.state }}</b> | Deadline: {{ object.deadline }}</p>
+<h2 class="mb-3">
+  {{ object.operation_template.name }}
+  <small class="text-muted">({{ object.operation_template.get_type_display }})</small>
+</h2>
 
-<h4>Asignaciones propias</h4>
-<form method="post">{% csrf_token %}
-  {{ form|crispy }}
-</form>
+<p>
+  Estado:
+  {% if object.state == "COMPLETED" %}
+     <span class="badge bg-success">Completada</span>
+  {% elif object.state == "LATE" %}
+     <span class="badge bg-danger">Atrasada</span>
+  {% else %}
+     <span class="badge bg-warning text-dark">Pendiente</span>
+  {% endif %}
+  |
+  Deadline: {{ object.deadline|date:"d/m/Y" }} 
+</p>
 
-<h4>Subir documento</h4>
-<form method="post" enctype="multipart/form-data">{% csrf_token %}
-  {{ upload_form|crispy }}
-</form>
+<hr>
 
-<h4>Documentos</h4>
-<ul>{% for doc in object.documents.all %}<li>{{ doc.file.name }}</li>{% endfor %}</ul>
+<h4>Asignaciones</h4>
+<table class="table table-sm">
+  <thead><tr><th>Usuario</th><th>Rol</th><th>Estado</th></tr></thead>
+  <tbody>
+  {% for a in object.assignments.all %}
+    <tr>
+      <td>{{ a.user.get_full_name|default:a.user.username }}</td>
+      <td>{{ a.get_role_in_operation_display }}</td>
+      <td>
+        {% if a.status == "COMPLETED" %}
+          <span class="badge bg-success">Hecho</span>
+        {% else %}
+          <span class="badge bg-secondary">Pendiente</span>
+        {% endif %}
+      </td>
+    </tr>
+  {% empty %}
+    <tr><td colspan="3">Sin asignaciones</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% comment --------------------------------------------- %}
+  FORMULARIO “COMPLETAR OPERACIÓN”
+{% endcomment %}
+{% if form and form_visible %}
+  <h4>Completar operación</h4>
+  <form method="post">{% csrf_token %}
+    {{ form|crispy }}
+  </form>
+{% endif %}
+
+{% comment --------------------------------------------- %}
+  SUBIDA DE DOCUMENTO (solo cuando operation_template.type requiere documento)
+{% endcomment %}
+{% if upload_form and upload_visible %}
+  <h4 class="mt-4">Subir documento</h4>
+  <form method="post" enctype="multipart/form-data">{% csrf_token %}
+    {{ upload_form|crispy }}
+  </form>
+{% endif %}
+
+{% if approve_visible %}
+  <h4 class="mt-4">Aprobar documento</h4>
+  <form method="post">{% csrf_token %}
+     <input type="hidden" name="approve" value="1">
+     <button class="btn btn-success">Aprobar operación</button>
+  </form>
+{% endif %}
+
+<h4 class="mt-4">Documentos</h4>
+<ul>
+  {% for doc in object.documents.all %}
+    <li>
+      <a href="{{ doc.file.url }}" download>{{ doc.file.name|basename }}</a>  - subido {{ doc.uploaded_at|naturaltime }}
+      {% if request.user.role == 'MANAGER' and not doc.approved_at %}
+        <form method="post" class="d-inline">{% csrf_token %}
+          <input type="hidden" name="delete_doc" value="{{ doc.id }}">
+          <button class="btn btn-sm btn-link text-danger">eliminar</button>
+        </form>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>No hay documentos</li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'instance-detail' object.subprocess_instance_id %}" class="btn btn-secondary mt-3">Volver a instancia</a>
 {% endblock %}

@@ -51,41 +51,89 @@ class InstanceListView(LoginRequiredMixin, ListView):
         return qs
 
 
-# ---------- Operaciones ----------
 class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
     model = OperationInstance
     template_name = "operations/detail.html"
     form_class = OperationCompleteForm
 
-    def get_success_url(self):
-        return reverse("instance-detail", args=[self.object.subprocess_instance_id])
-
-    def form_valid(self, form):
-        # Completar asignaciones del usuario
+    # ----------  Helpers de visibilidad ----------
+    def get_form_kwargs(self):
+        """Solo muestra el formulario si el usuario tiene asignación pendiente."""
+        kwargs = super().get_form_kwargs()
         self.object = self.get_object()
-        self.object.assignments.filter(user=self.request.user, status="PENDING").update(
-            status="COMPLETED", completed_at=timezone.now()
-        )
-        return super().form_valid(form)
+        kwargs["initial"] = {"confirm": True}
+        return kwargs
 
+    @property
+    def form_visible(self):
+        return self.object.assignments.filter(user=self.request.user, status="PENDING").exists()
+
+    @property
+    def upload_visible(self):
+        t = self.object.operation_template
+        return t.type in ("DOC_REQUEST", "REVIEW")
+
+    @property
+    def approve_visible(self):
+        t = self.object.operation_template
+        return t.requires_approval and self.request.user.role == User.Role.MANAGER and self.object.state != "COMPLETED"
+
+    # ----------  Context ----------
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["upload_form"] = DocumentUploadForm()
+        ctx["upload_form"] = DocumentUploadForm() if self.upload_visible else None
+        ctx["form_visible"] = self.form_visible
+        ctx["upload_visible"] = self.upload_visible
+        ctx["approve_visible"] = self.approve_visible
         return ctx
 
+    # ----------  POST ----------
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        if "file" in request.FILES:
-            # carga de documento
+
+        # ---------- 1) Eliminar documento ----------
+        doc_id = request.POST.get("delete_doc")
+        if doc_id and request.user.role == User.Role.MANAGER:
+            from processes.models import Document
+            Document.objects.filter(id=doc_id, operation_instance=self.object).delete()
+            messages.success(request, "Documento eliminado.")
+            return redirect(request.path)
+
+        # ---------- 2) Aprobar operación ----------
+        if request.POST.get("approve") == "1" and self.approve_visible:
+            self.object.state = "COMPLETED"
+            self.object.save(update_fields=["state"])
+            messages.success(request, "Operación aprobada.")
+            return redirect(request.path)
+
+        # ---------- 3) Subir documento ----------
+        if "file" in request.FILES and self.upload_visible:
             form = DocumentUploadForm(request.POST, request.FILES)
             if form.is_valid():
                 doc = form.save(commit=False)
                 doc.operation_instance = self.object
                 doc.uploaded_by = request.user
                 doc.save()
+                messages.success(request, "Documento cargado.")
             return redirect(request.path)
-        # confirmación de operación completada
-        return super().post(request, *args, **kwargs)
+
+        # ---------- 4) Completar asignación ----------
+        if self.form_visible:
+            return super().post(request, *args, **kwargs)
+
+        messages.error(request, "No puedes realizar esta acción.")
+        return redirect(request.path)
+
+    # ----------  Completar ----------
+    def form_valid(self, form):
+        self.object.assignments.filter(user=self.request.user, status="PENDING").update(
+            status="COMPLETED", completed_at=timezone.now()
+        )
+        messages.success(self.request, "Has completado la operación.")
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse("operation-detail", args=[self.object.id])
 
 
 # ---------- Notificaciones ----------
