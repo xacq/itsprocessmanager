@@ -13,37 +13,31 @@ Herramienta | Versión probada
 Python      | 3.10+
 Django      | 4.2
 MySQL       | 8+ (funciona con XAMPP)
-Node/NPM    | opcional (solo si luego compilas un front)
 
 -----------------------------------------------------------------------
 2 · Instalación rápida
 -----------------------------------------------------------------------
 
-```bash
 git clone https://github.com/xacq/itsprocessmanager.git
 cd itsprocessmanager
 
 python -m venv venv
-venv\Scripts\activate       # Linux/Mac: source venv/bin/activate
+venv\Scripts\activate 
 pip install -r requirements.txt
-```
 
 Configura la conexión MySQL en `config/settings.py`
-(o usa variables de entorno **DB_NAME / DB_USER / DB_PASS**).
 
 Crea la base vacía:
 
-```sql
 CREATE DATABASE ist_austro CHARACTER SET utf8mb4;
-```
 
 Luego:
 
-```bash
+python manage.py makemigrations
 python manage.py migrate
 python manage.py createsuperuser        # id = 1  (ADMIN)
 python manage.py loaddata processes/fixtures/initial.json
-```
+
 
 Se cargarán:
 
@@ -125,7 +119,6 @@ source venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py loaddata processes/fixtures/initial.json
-python manage.py collectstatic  --noinput
 
 -----------------------------------------------------------------------
 10 · Licencia
@@ -133,18 +126,18 @@ python manage.py collectstatic  --noinput
 
 MIT © 2025 IST Austro / Autor original.
 
-*************************PRIMERA ENTREGA*************************
+        
+
 A) Crea la carpeta de trabajo
 mkdir C:\Proyectos\ist_process_manager
 cd C:\Proyectos\ist_process_manager
 
 B) Crea y activa un entorno virtual
 python -m venv venv
-.\venv\Scripts\activate 
+\venv\Scripts\activate 
 
 PAQUETES A INSTALAR
 pip install --upgrade pip
-pip install django==4.2 mysqlclient python-dotenv
 
 django-admin startproject config .
 python manage.py startapp processes
@@ -163,22 +156,7 @@ Si se necesita el admin:
 http://127.0.0.1:8000/admin/
 colocar los datos del superuser
 
-Crear carpeta fixtures y con el archivo process_seed.json 
-
-    python manage.py loaddata process_seed
-
-# mantener 001 en los tres niveles produce el código jerárquico:
-ProcessInstitution   → 001
-MacroProcess         → 001   → 001.001
-Process              → 001   → 001.001.001
-Dentro de cada ámbito padre el sufijo debe ser único, pero empezar todo en 001 es totalmente válido para la primera rama.
-
 *************************SEGUNDA ENTREGA*************************
-
-PAQUETES A INSTALAR
-pip install djangorestframework drf-spectacular drf-spectacular-sidecar //API REST
-pip install django-crispy-forms crispy-bootstrap5  //UI Boostrap
-
 Comando CLI instantiate_spi
     processes/management/commands/instantiate_spi.py
 
@@ -192,11 +170,6 @@ python manage.py shell
 >>> u.role = "ADMIN"; u.is_staff = True
 >>> u.save()
 
-Migraciones y prueba rápida
-
-python manage.py makemigrations
-python manage.py migrate
-
 Ejecutar para ver el IST Process Manager API
 
 http://127.0.0.1:8000/api/
@@ -208,14 +181,10 @@ http://127.0.0.1:8000/api/?format=json
 http://127.0.0.1:8000/dashboard
 
 *************************TERCERA ENTREGA*************************
-PAQUETES A INSTALAR
-pip install django-cron
-pip install djangorestframework-simplejwt
-
 VER IMAGEN Imagen de la primer instanciación.png en carpeta evidencias
 
 USAURIOS ACTUALES
-    SUPERUSERq      
+    SUPERUSER      
     username="admin",
     password="123Qwerty$%^",
     role=User.Role.ADMIN

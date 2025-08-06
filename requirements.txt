@@ -1,0 +1,49 @@
+# ============================
+# Core Framework
+# ============================
+django==4.2
+
+# ============================
+# API y Autenticación
+# ============================
+# Framework para construir APIs web
+djangorestframework
+# Autenticación basada en JSON Web Tokens
+djangorestframework-simplejwt
+
+# ============================
+# Documentación de la API
+# ============================
+# Generación de esquemas OpenAPI 3 para la API
+drf-spectacular
+# Sirve la UI de Swagger o Redoc localmente
+drf-spectacular-sidecar
+
+# ============================
+# Base de Datos
+# ============================
+# Driver para conectar Django con una base de datos MySQL o MariaDB
+mysqlclient
+
+# ============================
+# Formularios y Frontend
+# ============================
+# Gestiona la renderización de formularios de Django
+django-crispy-forms
+# Paquete de plantillas para usar Crispy Forms con Bootstrap 5
+crispy-bootstrap5
+
+# ============================
+# Tareas Programadas
+# ============================
+# Para ejecutar funciones de manera periódica (cron jobs)
+django-cron
+
+# ============================
+# Utilidades y Configuración
+# ============================
+# Lee variables de entorno desde un archivo .env
+python-dotenv
+
+# Servidor de aplicaciones WSGI para producción (recomendado)
+gunicorn
