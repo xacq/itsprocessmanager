@@ -8,7 +8,14 @@ from django.contrib import messages
 
 from processes.services import instantiate_subprocess
 
-from .models import SubProcessInstance, OperationInstance, Notification, SubProcessTemplate, User
+from .models import (
+    SubProcessInstance,
+    OperationInstance,
+    Notification,
+    SubProcessTemplate,
+    User,
+    Document,
+)
 from .forms import OperationCompleteForm, DocumentUploadForm, SubProcessStartForm
 
 class DashboardView(LoginRequiredMixin, TemplateView):
@@ -51,10 +58,56 @@ class InstanceListView(LoginRequiredMixin, ListView):
         return qs
 
 
+class SubProcessTemplateListView(LoginRequiredMixin, ListView):
+    model = SubProcessTemplate
+    template_name = "templates/list.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role != User.Role.MANAGER:
+            messages.error(request, "Solo los gestores de procesos pueden iniciar subprocesos.")
+            return redirect("dashboard")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return SubProcessTemplate.objects.filter(process__manager=self.request.user)
+
+
 class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
     model = OperationInstance
     template_name = "operations/detail.html"
     form_class = OperationCompleteForm
+    queryset = OperationInstance.objects.all()
+
+    def get_queryset(self):
+        qs = super().get_queryset().select_related(
+            "subprocess_instance__template__process__manager",
+            "operation_template",
+        ).prefetch_related("assignments__user", "documents")
+        user = self.request.user
+        if user.role == User.Role.ADMIN:
+            return qs
+        if user.role == User.Role.MANAGER:
+            return qs.filter(subprocess_instance__template__process__manager=user)
+        return qs.filter(assignments__user=user).distinct()
+
+    def _previous_incomplete(self):
+        return OperationInstance.objects.filter(
+            subprocess_instance=self.object.subprocess_instance,
+            order__lt=self.object.order,
+        ).exclude(state="COMPLETED").exists()
+
+    @property
+    def previous_pending(self):
+        return getattr(self, "_prev_pending_cache", False)
+
+    def get_object(self, queryset=None):
+        obj = super().get_object(queryset)
+        # calcula una vez y guarda
+        self._prev_pending_cache = OperationInstance.objects.filter(
+            subprocess_instance=obj.subprocess_instance,
+            order__lt=obj.order,
+        ).exclude(state="COMPLETED").exists()
+        return obj
 
     # ----------  Helpers de visibilidad ----------
     def get_form_kwargs(self):
@@ -66,17 +119,24 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
 
     @property
     def form_visible(self):
+        if self.previous_pending:
+            return False
         return self.object.assignments.filter(user=self.request.user, status="PENDING").exists()
 
     @property
     def upload_visible(self):
         t = self.object.operation_template
-        return t.type in ("DOC_REQUEST", "REVIEW")
+        return t.type in ("DOC_REQUEST", "REVIEW") and not self.previous_pending
 
     @property
     def approve_visible(self):
         t = self.object.operation_template
-        return t.requires_approval and self.request.user.role == User.Role.MANAGER and self.object.state != "COMPLETED"
+        return (
+            t.requires_approval
+            and self.request.user.role == User.Role.MANAGER
+            and self.object.state != "COMPLETED"
+            and not self.previous_pending
+        )
 
     # ----------  Context ----------
     def get_context_data(self, **kwargs):
@@ -85,11 +145,13 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
         ctx["form_visible"] = self.form_visible
         ctx["upload_visible"] = self.upload_visible
         ctx["approve_visible"] = self.approve_visible
+        ctx["blocked_by_previous"] = self.previous_pending
         return ctx
 
     # ----------  POST ----------
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
+        self._prev_pending_cache = self._previous_incomplete()
 
         # ---------- 1) Eliminar documento ----------
         doc_id = request.POST.get("delete_doc")
@@ -162,14 +224,27 @@ class SubProcessTemplateStartView(LoginRequiredMixin, FormView):
                                           form.cleaned_data["period"],
                                           self.request.user)
         return redirect("instance-detail", spi.pk)
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["template_obj"] = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        return ctx
 
 
 class StartView(LoginRequiredMixin, FormView):
     template_name = "templates/start.html"
     form_class = SubProcessStartForm
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role != User.Role.MANAGER:
+            messages.error(request, "Solo los gestores de procesos pueden iniciar subprocesos.")
+            return redirect("dashboard")
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         tpl = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        if tpl.process.manager != self.request.user:
+            messages.error(self.request, "No puedes iniciar subprocesos que no gestionas.")
+            return redirect("dashboard")
         spi = instantiate_subprocess(
             tpl,
             form.cleaned_data["career"],
@@ -178,6 +253,11 @@ class StartView(LoginRequiredMixin, FormView):
         )
         messages.success(self.request, f"Subproceso #{spi.pk} creado.")
         return redirect("instance-detail", spi.pk)
+    
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["template_obj"] = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        return ctx
     
 
 class InstanceDetailView(LoginRequiredMixin, DetailView):
@@ -199,3 +279,33 @@ class InstanceDetailView(LoginRequiredMixin, DetailView):
             return qs.filter(template__process__manager=user)
         # 3) Participante ve donde está asignado
         return qs.filter(operation_instances__assignments__user=user).distinct()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        user = self.request.user
+        ops = self.object.operation_instances.all()
+        if user.role == User.Role.PARTICIPANT:
+            ops = ops.filter(assignments__user=user).distinct()
+        ctx["visible_operations"] = ops
+        return ctx
+
+
+class ManagerDocumentListView(LoginRequiredMixin, ListView):
+    model = Document
+    template_name = "documents/list.html"
+    paginate_by = 20
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.role != User.Role.MANAGER:
+            messages.error(request, "Solo los gestores pueden ver documentos de sus subprocesos.")
+            return redirect("dashboard")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_queryset(self):
+        return Document.objects.select_related(
+            "operation_instance__subprocess_instance__template__process__manager",
+            "operation_instance__operation_template",
+            "uploaded_by",
+        ).filter(
+            operation_instance__subprocess_instance__template__process__manager=self.request.user
+        )

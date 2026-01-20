@@ -8,13 +8,16 @@
 </head>
 <body class="container py-4">
 
-  <nav class="mb-4">
-    <a href="{% url 'dashboard' %}" class="me-3">Dashboard</a>
+  <nav class="mb-4 d-flex align-items-center">
+    <a href="{% url 'dashboard' %}" class="me-3">Panel</a>
     <a href="{% url 'instance-list' %}" class="me-3">Instancias</a>
-    <a href="{% url 'notification-list' %}" class="me-3">Notificaciones</a>
-    <span class="float-end">Hola {{ user.username }} | <a href="{% url 'logout' %}">Salir</a></span>
+    <a href="{% url 'notification-list' %}" class="me-3">Notificaciones {% if unread_count %}<span class="badge bg-danger">{{ unread_count }}</span>{% endif %}</a>
+    {% if user.role == 'MANAGER' %}
+      <a href="{% url 'template-list' %}" class="me-3">Iniciar subproceso</a>
+      <a href="{% url 'document-list' %}" class="me-3">Documentos</a>
+    {% endif %}
+    <span class="ms-auto">Hola {{ user.username }} | <a href="{% url 'logout' %}">Cerrar sesión</a></span>
   </nav>
-    <span class="badge bg-danger">{{ unread_count }}</span>
 
   {% if messages %}
     {% for m in messages %}

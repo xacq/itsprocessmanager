@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Documentos cargados{% endblock %}
+{% block content %}
+<h2>Documentos de mis subprocesos</h2>
+<table class="table table-sm">
+  <thead>
+    <tr>
+      <th>Archivo</th>
+      <th>Operación</th>
+      <th>Subproceso</th>
+      <th>Subido por</th>
+      <th>Fecha</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for doc in object_list %}
+      <tr>
+        <td><a href="{{ doc.file.url }}" download>{{ doc.file.name|basename }}</a></td>
+        <td>{{ doc.operation_instance.operation_template.name }}</td>
+        <td>#{{ doc.operation_instance.subprocess_instance.id }} - {{ doc.operation_instance.subprocess_instance.template.name }}</td>
+        <td>{{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.username }}</td>
+        <td>{{ doc.uploaded_at|date:"d/m/Y H:i" }}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5">Aún no hay documentos cargados.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

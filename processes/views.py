@@ -18,10 +18,22 @@ class MacroProcessView(viewsets.ReadOnlyModelViewSet):
     queryset = MacroProcess.objects.all()
     serializer_class = MacroProcessSerializer
 
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated and user.role == "MANAGER":
+            return MacroProcess.objects.filter(process__manager=user).distinct()
+        return MacroProcess.objects.all()
+
 
 class ProcessView(viewsets.ReadOnlyModelViewSet):
     queryset = Process.objects.all()
     serializer_class = ProcessSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated and user.role == "MANAGER":
+            return Process.objects.filter(manager=user)
+        return Process.objects.all()
 
 
 # ------ Plantillas (solo Gestor) ------
@@ -29,6 +41,12 @@ class SubProcessTemplateView(viewsets.ModelViewSet):
     queryset = SubProcessTemplate.objects.all()
     serializer_class = SubProcessTemplateSerializer
     permission_classes = [IsManager]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_authenticated and user.role == "MANAGER":
+            return SubProcessTemplate.objects.filter(process__manager=user)
+        return SubProcessTemplate.objects.all()
 
 
 # ------ Instancias ------
@@ -53,6 +71,18 @@ class OperationInstanceView(viewsets.GenericViewSet,
                             mixins.UpdateModelMixin):
     queryset = OperationInstance.objects.all()
     serializer_class = OperationInstanceSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset().select_related(
+            "subprocess_instance__template__process__manager",
+            "operation_template",
+        )
+        user = self.request.user
+        if user.role == User.Role.ADMIN:
+            return qs
+        if user.role == User.Role.MANAGER:
+            return qs.filter(subprocess_instance__template__process__manager=user)
+        return qs.filter(assignments__user=user).distinct()
 
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):

@@ -200,8 +200,23 @@ class OperationActorTemplate(models.Model):
         related_name="actor_templates",
     )
     role = models.CharField(max_length=12, choices=User.Role.choices)
+    participant = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="operation_actor_templates",
+        limit_choices_to={"role": User.Role.PARTICIPANT},
+    )
     is_emitter = models.BooleanField(default=False)
     is_receiver = models.BooleanField(default=False)
+
+    def clean(self):
+        if self.role == User.Role.PARTICIPANT and not self.participant:
+            raise ValidationError("Debe seleccionar el participante para esta operación.")
+        if self.role != User.Role.PARTICIPANT and self.participant:
+            raise ValidationError("Sólo los roles PARTICIPANT pueden tener un usuario específico.")
+        super().clean()
 
 
 # --------------------------------------------------

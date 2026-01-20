@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% block title %}Instancia #{{ object.id }}{% endblock %}
 {% block content %}
-<h2>Instancia #{{ object.id }} – {{ object.template.name }}</h2>
+<h2>Instancia #{{ object.id }} - {{ object.template.name }}</h2>
 <p>
   Carrera: {{ object.career.name }} |
-  Periodo: {{ object.period.code }} |
+  Período: {{ object.period.code }} |
   Estado:
   <span class="badge bg-info">{{ object.state }}</span>
 </p>
 
 <table class="table table-sm">
-  <thead><tr><th>#</th><th>Operación</th><th>Estado</th><th>Deadline</th><th></th></tr></thead>
+  <thead><tr><th>#</th><th>Operación</th><th>Estado</th><th>Fecha límite</th><th></th></tr></thead>
   <tbody>
-  {% for op in object.operation_instances.all %}
+  {% for op in visible_operations %}
     <tr class="{% if op.state == 'LATE' %}table-danger{% elif op.state == 'COMPLETED' %}table-success{% endif %}">
       <td>{{ op.order }}</td>
       <td>{{ op.operation_template.name }}</td>

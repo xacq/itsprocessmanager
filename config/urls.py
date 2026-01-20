@@ -20,6 +20,8 @@ urlpatterns = [
     path("instances/<int:pk>/", pui.InstanceDetailView.as_view(), name="instance-detail"),
     path("operations/<int:pk>/", pui.OperationDetailView.as_view(), name="operation-detail"),
     path("notifications/", pui.NotificationListView.as_view(), name="notification-list"),
+    path("plantillas/", pui.SubProcessTemplateListView.as_view(), name="template-list"),
+    path("documentos/", pui.ManagerDocumentListView.as_view(), name="document-list"),
 
     # API
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),

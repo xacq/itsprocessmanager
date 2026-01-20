@@ -19,8 +19,14 @@
      <span class="badge bg-warning text-dark">Pendiente</span>
   {% endif %}
   |
-  Deadline: {{ object.deadline|date:"d/m/Y" }} 
+  Fecha límite: {{ object.deadline|date:"d/m/Y" }} 
 </p>
+
+{% if blocked_by_previous %}
+  <div class="alert alert-warning">
+    Debes completar las operaciones anteriores antes de continuar con esta.
+  </div>
+{% endif %}
 
 <hr>
 
@@ -46,9 +52,6 @@
   </tbody>
 </table>
 
-{% comment --------------------------------------------- %}
-  FORMULARIO “COMPLETAR OPERACIÓN”
-{% endcomment %}
 {% if form and form_visible %}
   <h4>Completar operación</h4>
   <form method="post">{% csrf_token %}
@@ -56,9 +59,6 @@
   </form>
 {% endif %}
 
-{% comment --------------------------------------------- %}
-  SUBIDA DE DOCUMENTO (solo cuando operation_template.type requiere documento)
-{% endcomment %}
 {% if upload_form and upload_visible %}
   <h4 class="mt-4">Subir documento</h4>
   <form method="post" enctype="multipart/form-data">{% csrf_token %}
@@ -67,7 +67,7 @@
 {% endif %}
 
 {% if approve_visible %}
-  <h4 class="mt-4">Aprobar documento</h4>
+  <h4 class="mt-4">Aprobar operación</h4>
   <form method="post">{% csrf_token %}
      <input type="hidden" name="approve" value="1">
      <button class="btn btn-success">Aprobar operación</button>

@@ -2,6 +2,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
+from django import forms
 
 from .models import (
     User,
@@ -41,6 +42,20 @@ class UserAdmin(BaseUserAdmin):
     search_fields = ("username", "email", "id_number")
     ordering = ("username",)
 
+    # Gestor solo puede crear/editar usuarios PARTICIPANT
+    def formfield_for_choice_field(self, db_field, request, **kwargs):
+        if db_field.name == "role" and hasattr(request, "user"):
+            u = request.user
+            if not u.is_superuser and getattr(u, "role", None) == User.Role.MANAGER:
+                kwargs["choices"] = [(User.Role.PARTICIPANT, User.Role.PARTICIPANT)]
+        return super().formfield_for_choice_field(db_field, request, **kwargs)
+
+    def save_model(self, request, obj, form, change):
+        u = request.user
+        if not u.is_superuser and getattr(u, "role", None) == User.Role.MANAGER:
+            obj.role = User.Role.PARTICIPANT  # fuerza el rol permitido
+        super().save_model(request, obj, form, change)
+
 
 # ───────────────────────────────────────────────────────────────────────────
 # 2.  MIXIN FECHAS
@@ -70,26 +85,61 @@ class OperationTemplateInline(admin.TabularInline):
 class OperationActorTemplateInline(admin.TabularInline):
     model = OperationActorTemplate
     extra = 1
+    fields = ("role", "participant", "is_emitter", "is_receiver")
 
 
 # ───────────────────────────────────────────────────────────────────────────
 # 4.  ADMIN DE CATÁLOGO JERÁRQUICO
 # ───────────────────────────────────────────────────────────────────────────
+class ManagerRestrictionMixin:
+    def has_add_permission(self, request):
+        if request.user.is_superuser:
+            return True
+        if hasattr(request.user, 'role') and request.user.role == 'MANAGER':
+            return False
+        return super().has_add_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        if hasattr(request.user, 'role') and request.user.role == 'MANAGER':
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        if hasattr(request.user, 'role') and request.user.role == 'MANAGER':
+            return False
+        return super().has_delete_permission(request, obj)
+
+
 @admin.register(ProcessInstitution)
-class ProcessInstitutionAdmin(TimeStampedMixin):
+class ProcessInstitutionAdmin(ManagerRestrictionMixin, TimeStampedMixin):
     list_display = ("code", "name", "created_at")
     search_fields = ("code", "name")
 
 
 @admin.register(MacroProcess)
-class MacroProcessAdmin(TimeStampedMixin):
+class MacroProcessAdmin(ManagerRestrictionMixin, TimeStampedMixin):
     list_display = ("code", "name", "process_institution", "created_at")
     list_filter = ("process_institution",)
     search_fields = ("code", "name")
 
 
+class ProcessAdminForm(forms.ModelForm):
+    class Meta:
+        model = Process
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["manager"].queryset = User.objects.filter(role=User.Role.MANAGER)
+
+
 @admin.register(Process)
 class ProcessAdmin(TimeStampedMixin):
+    form = ProcessAdminForm
     list_display = ("code", "name", "macro_process", "manager_badge")
     list_filter = ("macro_process__process_institution",)
     search_fields = ("code", "name", "manager__username")

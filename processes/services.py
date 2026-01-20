@@ -81,8 +81,10 @@ def instantiate_subprocess(template: SubProcessTemplate,
             deadline=deadline,
         )
 
-        for at in ot.actor_templates.all():
-            for user in _users_for_role(at.role, template, participants, creator):
+        for at in ot.actor_templates.select_related("participant"):
+            target_users = [at.participant] if at.participant else \
+                           _users_for_role(at.role, template, participants, creator)
+            for user in target_users:
                 OperationAssignment.objects.create(
                     operation_instance=oi,
                     user=user,

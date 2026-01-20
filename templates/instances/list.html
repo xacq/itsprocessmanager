@@ -1,9 +1,17 @@
 {% extends "base.html" %}
 {% block title %}Instancias{% endblock %}
 {% block content %}
-<h2>Subprocess Instances</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h2>Instancias de subproceso</h2>
+  {% if user.role == 'MANAGER' %}
+    <a class="btn btn-primary" href="{% url 'template-list' %}">Iniciar nuevo subproceso</a>
+  {% endif %}
+</div>
 <table class="table table-sm">
-  <tr><th>ID</th><th>Plantilla</th><th>Estado</th><th>Periodo</th></tr>
+  <thead>
+    <tr><th>ID</th><th>Plantilla</th><th>Estado</th><th>Período</th></tr>
+  </thead>
+  <tbody>
   {% for spi in object_list %}
     <tr>
       <td><a href="{% url 'instance-detail' spi.id %}">{{ spi.id }}</a></td>
@@ -14,5 +22,6 @@
   {% empty %}
     <tr><td colspan="4">No hay instancias</td></tr>
   {% endfor %}
+  </tbody>
 </table>
 {% endblock %}
