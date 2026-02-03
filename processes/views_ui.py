@@ -133,7 +133,7 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
         t = self.object.operation_template
         return (
             t.requires_approval
-            and self.request.user.role == User.Role.MANAGER
+            and self.request.user.role in (User.Role.MANAGER, User.Role.ADMIN)
             and self.object.state != "COMPLETED"
             and not self.previous_pending
         )
@@ -155,7 +155,7 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
 
         # ---------- 1) Eliminar documento ----------
         doc_id = request.POST.get("delete_doc")
-        if doc_id and request.user.role == User.Role.MANAGER:
+        if doc_id and request.user.role in (User.Role.MANAGER, User.Role.ADMIN):
             from processes.models import Document
             Document.objects.filter(id=doc_id, operation_instance=self.object).delete()
             messages.success(request, "Documento eliminado.")
