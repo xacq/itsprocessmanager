@@ -3,10 +3,14 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse
-from django.utils import timezone
 from django.contrib import messages
 
-from processes.services import instantiate_subprocess
+from processes.services import (
+    approve_operation,
+    attach_document,
+    complete_user_assignments,
+    instantiate_subprocess,
+)
 
 from .models import (
     SubProcessInstance,
@@ -163,8 +167,7 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
 
         # ---------- 2) Aprobar operación ----------
         if request.POST.get("approve") == "1" and self.approve_visible:
-            self.object.state = "COMPLETED"
-            self.object.save(update_fields=["state"])
+            approve_operation(self.object, request.user)
             messages.success(request, "Operación aprobada.")
             return redirect(request.path)
 
@@ -172,11 +175,11 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
         if "file" in request.FILES and self.upload_visible:
             form = DocumentUploadForm(request.POST, request.FILES)
             if form.is_valid():
-                doc = form.save(commit=False)
-                doc.operation_instance = self.object
-                doc.uploaded_by = request.user
-                doc.save()
-                messages.success(request, "Documento cargado.")
+                try:
+                    attach_document(self.object, request.user, form.cleaned_data["file"])
+                    messages.success(request, "Documento cargado.")
+                except ValueError as exc:
+                    messages.error(request, str(exc))
             return redirect(request.path)
 
         # ---------- 4) Completar asignación ----------
@@ -188,9 +191,7 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
 
     # ----------  Completar ----------
     def form_valid(self, form):
-        self.object.assignments.filter(user=self.request.user, status="PENDING").update(
-            status="COMPLETED", completed_at=timezone.now()
-        )
+        complete_user_assignments(self.object, self.request.user)
         messages.success(self.request, "Has completado la operación.")
         return super().form_valid(form)
 
