@@ -67,65 +67,26 @@ CREATE DATABASE ist_austro CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 python manage.py migrate
 ```
 
-### 6. Crear Usuarios Iniciales
+### 6. Inicializar Datos Demo (Recomendado)
 
-**IMPORTANTE:** El modelo User requiere el campo `id_number` (cédula/DNI) único.
-
-#### Crear Superusuario (ADMIN - ID=1)
+Después de ejecutar las migraciones, usa el comando de bootstrap para crear usuarios demo y cargar la estructura inicial de procesos:
 
 ```bash
-python manage.py createsuperuser --username admin --email admin@istausto.edu.ec --noinput
+python manage.py bootstrap_demo
 ```
 
-Luego configurar contraseña y rol:
+Este comando crea o actualiza:
 
-```bash
-python manage.py shell
-```
+- ✅ Admin `admin`
+- ✅ Gestor `gestor`
+- ✅ Participantes `alumno1`, `alumno2`, `alumno3`
+- ✅ Datos base desde `processes/fixtures/initial.json`
 
-```python
-from processes.models import User
+> Nota: esta es la ruta oficial recomendada para desarrollo y demostración. Evita depender de IDs creados manualmente.
 
-# Configurar admin
-u = User.objects.get(username='admin')
-u.set_password('123Qwerty$%^')
-u.id_number = '0000000001'
-u.role = 'ADMIN'
-u.is_staff = True
-u.is_superuser = True
-u.save()
-print(f'Admin configurado: ID={u.pk}, role={u.role}')
-exit()
-```
+### 7. Cargar Solo el Fixture (Avanzado)
 
-#### Crear Usuario Gestor (MANAGER - ID=2)
-
-```bash
-python manage.py shell
-```
-
-```python
-from processes.models import User
-from django.db import connection
-
-# Crear gestor con ID=2 (requerido por el fixture)
-cursor = connection.cursor()
-cursor.execute("""
-    INSERT INTO processes_user 
-    (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined, id_number, role) 
-    VALUES 
-    (2, 'pbkdf2_sha256$870000$temp', NULL, 0, 'gestor', '', '', 'gestor@istausto.edu.ec', 1, 1, NOW(), '0000000002', 'MANAGER')
-""")
-
-# Actualizar con la contraseña correcta
-gestor = User.objects.get(pk=2)
-gestor.set_password('Gestor123!')
-gestor.save()
-print(f'Gestor creado: ID={gestor.pk}, username={gestor.username}, role={gestor.role}')
-exit()
-```
-
-### 7. Cargar Datos Iniciales
+Si ya tienes creados el admin con ID `1` y el gestor con ID `2`, puedes cargar únicamente el fixture:
 
 ```bash
 python manage.py loaddata processes/fixtures/initial.json
@@ -136,18 +97,16 @@ python manage.py loaddata processes/fixtures/initial.json
 - ✅ 1 ProcessInstitution
 - ✅ 1 MacroProcess
 - ✅ 1 Process (Prácticas Pre-Profesionales)
-- ✅ 6 SubProcessTemplates
+- ✅ 5 SubProcessTemplates
 - ✅ 10 StorageTypes
 - ✅ 17 OperationTemplates
-- ✅ 36 OperationActorTemplates
+- ✅ 34 OperationActorTemplates
 - ✅ 2 Carreras de prueba (Tecnología en Redes, Contabilidad)
 - ✅ 1 Período Académico (2025-1)
 
-### 8. Crear Usuario Participante (Opcional)
+### 8. Sobre el Archivo SQL
 
-```bash
-python manage.py shell -c "from processes.models import User; alumno = User.objects.create_user(username='alumno', password='Alumno123!', email='alumno@istausto.edu.ec', role=User.Role.PARTICIPANT, id_number='1111111111'); print(f'Alumno creado: ID={alumno.pk}')"
-```
+El archivo `ist_austro sql.sql` es un respaldo completo de demostración. Úsalo solo sobre una base vacía si necesitas restaurar exactamente ese dump. No lo mezcles con `python manage.py migrate` + `bootstrap_demo` sobre la misma base, porque podrías duplicar tablas o datos del sistema.
 
 ---
 
@@ -157,7 +116,9 @@ python manage.py shell -c "from processes.models import User; alumno = User.obje
 |-----|----------|----------|-------|
 | Admin | admin | `123Qwerty$%^` | <admin@istausto.edu.ec> |
 | Gestor | gestor | `Gestor123!` | <gestor@istausto.edu.ec> |
-| Participante | alumno | `Alumno123!` | <alumno@istausto.edu.ec> |
+| Participante | alumno1 | `Alumno123!` | <alumno1@istausto.edu.ec> |
+| Participante | alumno2 | `Alumno123!` | <alumno2@istausto.edu.ec> |
+| Participante | alumno3 | `Alumno123!` | <alumno3@istausto.edu.ec> |
 
 ---
 
@@ -213,11 +174,11 @@ itsprocessmanager/
 ## 🔄 Flujo de Trabajo
 
 1. **Gestor** inicia un subproceso desde `/templates/<id>/start/`
-2. Selecciona carrera y período académico
+2. Selecciona carrera, período académico y participantes cuando la plantilla los requiere
 3. Sistema crea automáticamente:
    - SubProcessInstance
    - OperationInstances
-   - Asignaciones a participantes
+   - Asignaciones al gestor y a los participantes seleccionados
 4. **Participantes** ven sus operaciones en `/instances/`
 5. Cargan evidencias según el tipo de operación
 6. **Gestor** revisa y aprueba documentos

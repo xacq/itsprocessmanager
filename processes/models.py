@@ -212,8 +212,6 @@ class OperationActorTemplate(models.Model):
     is_receiver = models.BooleanField(default=False)
 
     def clean(self):
-        if self.role == User.Role.PARTICIPANT and not self.participant:
-            raise ValidationError("Debe seleccionar el participante para esta operación.")
         if self.role != User.Role.PARTICIPANT and self.participant:
             raise ValidationError("Sólo los roles PARTICIPANT pueden tener un usuario específico.")
         super().clean()
