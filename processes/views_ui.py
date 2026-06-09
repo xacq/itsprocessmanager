@@ -11,6 +11,7 @@ from processes.services import (
     attach_document,
     complete_user_assignments,
     instantiate_subprocess,
+    reject_operation_documents,
 )
 
 from .models import (
@@ -21,7 +22,7 @@ from .models import (
     User,
     Document,
 )
-from .forms import OperationCompleteForm, DocumentUploadForm, SubProcessStartForm
+from .forms import DocumentRejectForm, DocumentUploadForm, OperationCompleteForm, SubProcessStartForm
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard.html"
@@ -167,6 +168,7 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["upload_form"] = DocumentUploadForm() if self.upload_visible else None
+        ctx["reject_form"] = DocumentRejectForm() if self.approve_visible else None
         ctx["form_visible"] = self.form_visible
         ctx["upload_visible"] = self.upload_visible
         ctx["approve_visible"] = self.approve_visible
@@ -190,6 +192,21 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
         if request.POST.get("approve") == "1" and self.approve_visible:
             approve_operation(self.object, request.user)
             messages.success(request, "Operación aprobada.")
+            return redirect(request.path)
+
+        # ---------- 2.1) Rechazar documentos ----------
+        if request.POST.get("reject") and self.approve_visible:
+            form = DocumentRejectForm(request.POST)
+            if form.is_valid():
+                try:
+                    reject_operation_documents(
+                        self.object,
+                        request.user,
+                        form.cleaned_data["comment"],
+                    )
+                    messages.success(request, "Documento rechazado y participante notificado.")
+                except ValueError as exc:
+                    messages.error(request, str(exc))
             return redirect(request.path)
 
         # ---------- 3) Subir documento ----------
