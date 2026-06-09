@@ -277,5 +277,4 @@ def attach_document(operation_instance, uploaded_by, uploaded_file):
         storage_type=storage_type,
         file=uploaded_file,
         uploaded_by=uploaded_by,
-        replaced_document=replaced_document,
     )
