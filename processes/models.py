@@ -91,6 +91,11 @@ class Process(TimestampedModel):
     class Meta:
         unique_together = ("macro_process", "code_suffix")
 
+    def clean(self):
+        if self.manager_id and self.manager.role != User.Role.MANAGER:
+            raise ValidationError("El responsable del proceso debe tener rol MANAGER.")
+        super().clean()
+
     # --- autogenera código 003 ---
     def save(self, *args, **kwargs):
         if not self.code_suffix:
@@ -101,6 +106,7 @@ class Process(TimestampedModel):
             )
             next_int = int(last["max_code"] or 0) + 1
             self.code_suffix = f"{next_int:03d}"
+        self.full_clean()
         super().save(*args, **kwargs)
 
     @property
@@ -214,6 +220,8 @@ class OperationActorTemplate(models.Model):
     def clean(self):
         if self.role != User.Role.PARTICIPANT and self.participant:
             raise ValidationError("Sólo los roles PARTICIPANT pueden tener un usuario específico.")
+        if self.participant and self.participant.role != User.Role.PARTICIPANT:
+            raise ValidationError("El usuario seleccionado debe tener rol PARTICIPANT.")
         super().clean()
 
 
@@ -297,6 +305,11 @@ class OperationAssignment(models.Model):
 
 
 class Document(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pendiente"
+        APPROVED = "APPROVED", "Aprobado"
+        REJECTED = "REJECTED", "Rechazado"
+
     operation_instance = models.ForeignKey(
         OperationInstance,
         on_delete=models.CASCADE,
@@ -306,6 +319,7 @@ class Document(models.Model):
     file = models.FileField(upload_to="documents/%Y/%m/%d/")
     uploaded_by = models.ForeignKey(User, on_delete=models.PROTECT)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.PENDING)
     approved_by = models.ForeignKey(
         User,
         on_delete=models.PROTECT,
@@ -313,6 +327,7 @@ class Document(models.Model):
         null=True, blank=True,
     )
     approved_at = models.DateTimeField(null=True, blank=True)
+    review_comment = models.TextField(blank=True)
     replaced_document = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL)
 
 
