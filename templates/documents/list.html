@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load extras %}
 {% block title %}Documentos cargados{% endblock %}
 {% block content %}
 <h2>Documentos de mis subprocesos</h2>
@@ -10,6 +11,7 @@
       <th>Subproceso</th>
       <th>Subido por</th>
       <th>Fecha</th>
+      <th>Estado</th>
     </tr>
   </thead>
   <tbody>
@@ -20,9 +22,10 @@
         <td>#{{ doc.operation_instance.subprocess_instance.id }} - {{ doc.operation_instance.subprocess_instance.template.name }}</td>
         <td>{{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.username }}</td>
         <td>{{ doc.uploaded_at|date:"d/m/Y H:i" }}</td>
+        <td>{{ doc.get_status_display }}</td>
       </tr>
     {% empty %}
-      <tr><td colspan="5">Aún no hay documentos cargados.</td></tr>
+      <tr><td colspan="6">Aún no hay documentos cargados.</td></tr>
     {% endfor %}
   </tbody>
 </table>

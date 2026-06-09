@@ -67,19 +67,28 @@
 {% endif %}
 
 {% if approve_visible %}
-  <h4 class="mt-4">Aprobar operación</h4>
-  <form method="post">{% csrf_token %}
+  <h4 class="mt-4">Revisión del gestor</h4>
+  <form method="post" class="mb-3">{% csrf_token %}
      <input type="hidden" name="approve" value="1">
      <button class="btn btn-success">Aprobar operación</button>
   </form>
+  {% if reject_form %}
+    <form method="post">{% csrf_token %}
+      {{ reject_form|crispy }}
+    </form>
+  {% endif %}
 {% endif %}
 
 <h4 class="mt-4">Documentos</h4>
 <ul>
   {% for doc in object.documents.all %}
     <li>
-      <a href="{{ doc.file.url }}" download>{{ doc.file.name|basename }}</a>  - subido {{ doc.uploaded_at|naturaltime }}
-      {% if request.user.role == 'MANAGER' and not doc.approved_at %}
+      <a href="{{ doc.file.url }}" download>{{ doc.file.name|basename }}</a>
+      - subido {{ doc.uploaded_at|naturaltime }}
+      - estado: {{ doc.get_status_display }}
+      {% if doc.review_comment %}<br><small class="text-danger">Observación: {{ doc.review_comment }}</small>{% endif %}
+      {% if doc.replaced_document_id %}<br><small class="text-muted">Reemplaza documento #{{ doc.replaced_document_id }}</small>{% endif %}
+      {% if request.user.role == 'MANAGER' and doc.status == 'PENDING' %}
         <form method="post" class="d-inline">{% csrf_token %}
           <input type="hidden" name="delete_doc" value="{{ doc.id }}">
           <button class="btn btn-sm btn-link text-danger">eliminar</button>

@@ -1,12 +1,18 @@
 # processes/views_ui.py
+from django.core.exceptions import ValidationError
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.shortcuts import redirect, get_object_or_404
 from django.urls import reverse
-from django.utils import timezone
 from django.contrib import messages
 
-from processes.services import instantiate_subprocess
+from processes.services import (
+    approve_operation,
+    attach_document,
+    complete_user_assignments,
+    instantiate_subprocess,
+    reject_operation_documents,
+)
 
 from .models import (
     SubProcessInstance,
@@ -16,7 +22,7 @@ from .models import (
     User,
     Document,
 )
-from .forms import OperationCompleteForm, DocumentUploadForm, SubProcessStartForm
+from .forms import DocumentRejectForm, DocumentUploadForm, OperationCompleteForm, SubProcessStartForm
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "dashboard.html"
@@ -70,6 +76,26 @@ class SubProcessTemplateListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return SubProcessTemplate.objects.filter(process__manager=self.request.user)
+
+
+class OperationListView(LoginRequiredMixin, ListView):
+    model = OperationInstance
+    template_name = "operations/list.html"
+    paginate_by = 15
+
+    def get_queryset(self):
+        qs = OperationInstance.objects.select_related(
+            "subprocess_instance__template__process__manager",
+            "subprocess_instance__career",
+            "subprocess_instance__period",
+            "operation_template",
+        )
+        user = self.request.user
+        if user.role == User.Role.ADMIN:
+            return qs
+        if user.role == User.Role.MANAGER:
+            return qs.filter(subprocess_instance__template__process__manager=user)
+        return qs.filter(assignments__user=user).distinct()
 
 
 class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
@@ -142,6 +168,7 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx["upload_form"] = DocumentUploadForm() if self.upload_visible else None
+        ctx["reject_form"] = DocumentRejectForm() if self.approve_visible else None
         ctx["form_visible"] = self.form_visible
         ctx["upload_visible"] = self.upload_visible
         ctx["approve_visible"] = self.approve_visible
@@ -163,20 +190,34 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
 
         # ---------- 2) Aprobar operación ----------
         if request.POST.get("approve") == "1" and self.approve_visible:
-            self.object.state = "COMPLETED"
-            self.object.save(update_fields=["state"])
+            approve_operation(self.object, request.user)
             messages.success(request, "Operación aprobada.")
+            return redirect(request.path)
+
+        # ---------- 2.1) Rechazar documentos ----------
+        if request.POST.get("reject") and self.approve_visible:
+            form = DocumentRejectForm(request.POST)
+            if form.is_valid():
+                try:
+                    reject_operation_documents(
+                        self.object,
+                        request.user,
+                        form.cleaned_data["comment"],
+                    )
+                    messages.success(request, "Documento rechazado y participante notificado.")
+                except ValueError as exc:
+                    messages.error(request, str(exc))
             return redirect(request.path)
 
         # ---------- 3) Subir documento ----------
         if "file" in request.FILES and self.upload_visible:
             form = DocumentUploadForm(request.POST, request.FILES)
             if form.is_valid():
-                doc = form.save(commit=False)
-                doc.operation_instance = self.object
-                doc.uploaded_by = request.user
-                doc.save()
-                messages.success(request, "Documento cargado.")
+                try:
+                    attach_document(self.object, request.user, form.cleaned_data["file"])
+                    messages.success(request, "Documento cargado.")
+                except ValueError as exc:
+                    messages.error(request, str(exc))
             return redirect(request.path)
 
         # ---------- 4) Completar asignación ----------
@@ -188,9 +229,7 @@ class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
 
     # ----------  Completar ----------
     def form_valid(self, form):
-        self.object.assignments.filter(user=self.request.user, status="PENDING").update(
-            status="COMPLETED", completed_at=timezone.now()
-        )
+        complete_user_assignments(self.object, self.request.user)
         messages.success(self.request, "Has completado la operación.")
         return super().form_valid(form)
 
@@ -217,22 +256,48 @@ class NotificationListView(LoginRequiredMixin, ListView):
 
 class SubProcessTemplateStartView(LoginRequiredMixin, FormView):
     template_name = "templates/start.html"
-    form_class = SubProcessStartForm  # carrera + periodo
+    form_class = SubProcessStartForm  # carrera + periodo + participantes
+
+    def get_template_object(self):
+        return get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["template"] = self.get_template_object()
+        return kwargs
+
     def form_valid(self, form):
-        tpl = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
-        spi = instantiate_subprocess(tpl, form.cleaned_data["career"],
-                                          form.cleaned_data["period"],
-                                          self.request.user)
+        tpl = self.get_template_object()
+        try:
+            spi = instantiate_subprocess(
+                tpl,
+                form.cleaned_data["career"],
+                form.cleaned_data["period"],
+                self.request.user,
+                participants=list(form.cleaned_data["participants"]),
+            )
+        except ValidationError as exc:
+            form.add_error("participants", exc)
+            return self.form_invalid(form)
         return redirect("instance-detail", spi.pk)
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["template_obj"] = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        ctx["template_obj"] = self.get_template_object()
         return ctx
 
 
 class StartView(LoginRequiredMixin, FormView):
     template_name = "templates/start.html"
     form_class = SubProcessStartForm
+
+    def get_template_object(self):
+        return get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["template"] = self.get_template_object()
+        return kwargs
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.role != User.Role.MANAGER:
@@ -241,22 +306,27 @@ class StartView(LoginRequiredMixin, FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        tpl = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        tpl = self.get_template_object()
         if tpl.process.manager != self.request.user:
             messages.error(self.request, "No puedes iniciar subprocesos que no gestionas.")
             return redirect("dashboard")
-        spi = instantiate_subprocess(
-            tpl,
-            form.cleaned_data["career"],
-            form.cleaned_data["period"],
-            self.request.user,
-        )
+        try:
+            spi = instantiate_subprocess(
+                tpl,
+                form.cleaned_data["career"],
+                form.cleaned_data["period"],
+                self.request.user,
+                participants=list(form.cleaned_data["participants"]),
+            )
+        except ValidationError as exc:
+            form.add_error("participants", exc)
+            return self.form_invalid(form)
         messages.success(self.request, f"Subproceso #{spi.pk} creado.")
         return redirect("instance-detail", spi.pk)
     
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["template_obj"] = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        ctx["template_obj"] = self.get_template_object()
         return ctx
     
 

@@ -43,19 +43,7 @@
       "updated_at": "2025-07-21T23:52:36Z",
       "process": 1,
       "name": "Planificación PPP",
-      "description": "Varios",
-      "created_by": 1
-    }
-  },
-  {
-    "model": "processes.subprocesstemplate",
-    "pk": 2,
-    "fields": {
-      "created_at": "2025-07-31T21:05:44.400Z",
-      "updated_at": "2025-08-01T01:29:08.612Z",
-      "process": 1,
-      "name": "Planificación PPP",
-      "description": "",
+      "description": "Planificación inicial de prácticas pre-profesionales",
       "created_by": 2
     }
   },
@@ -436,26 +424,6 @@
       "deadline_days": 0,
       "storage_type": 10,
       "requires_approval": false
-    }
-  },
-  {
-    "model": "processes.operationactortemplate",
-    "pk": 1,
-    "fields": {
-      "operation_template": 5,
-      "role": "PARTICIPANT",
-      "is_emitter": true,
-      "is_receiver": false
-    }
-  },
-  {
-    "model": "processes.operationactortemplate",
-    "pk": 2,
-    "fields": {
-      "operation_template": 5,
-      "role": "MANAGER",
-      "is_emitter": false,
-      "is_receiver": true
     }
   },
   {
