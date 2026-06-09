@@ -38,6 +38,7 @@ class IsManagerOrReadOnly(permissions.BasePermission):
         return request.user.role == User.Role.MANAGER
 
 
+
 class SubProcessInstanceViewSet(viewsets.ReadOnlyModelViewSet):
     """GET /api/subprocess-instances/ — lista / detalle de SPI."""
 
