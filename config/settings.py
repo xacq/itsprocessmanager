@@ -178,3 +178,7 @@ REST_FRAMEWORK.update({
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 })
+
+CRON_CLASSES = [
+    "processes.task.CheckOverdueOps",
+]

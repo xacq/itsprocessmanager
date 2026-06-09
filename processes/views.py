@@ -1,12 +1,13 @@
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 
 from .models import *
 from .serializers import *
 from .permissions import IsManager
-from .services import instantiate_subprocess
+from .services import attach_document, complete_user_assignments, instantiate_subprocess
 
 # ------ Catálogos (solo lectura pública) ------
 class InstitutionView(viewsets.ReadOnlyModelViewSet):
@@ -59,10 +60,27 @@ class SubProcessInstanceView(viewsets.ReadOnlyModelViewSet):
         """
         Body: {template_id, career_id, period_id}
         """
-        tpl = SubProcessTemplate.objects.get(pk=request.data["template_id"])
-        career = Career.objects.get(pk=request.data["career_id"])
-        period = AcademicPeriod.objects.get(pk=request.data["period_id"])
-        spi = instantiate_subprocess(tpl, career, period, request.user)
+        tpl = get_object_or_404(SubProcessTemplate, pk=request.data.get("template_id"))
+        if tpl.process.manager_id != request.user.id:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        career = get_object_or_404(Career, pk=request.data.get("career_id"))
+        period = get_object_or_404(AcademicPeriod, pk=request.data.get("period_id"))
+        participant_ids = request.data.get("participant_ids", []) or []
+        if isinstance(participant_ids, str):
+            participant_ids = [pk for pk in participant_ids.split(",") if pk]
+        elif isinstance(participant_ids, int):
+            participant_ids = [participant_ids]
+        participant_ids = list(participant_ids)
+        participants = list(User.objects.filter(id__in=participant_ids, role=User.Role.PARTICIPANT))
+        if len(participants) != len(set(participant_ids)):
+            return Response(
+                {"participant_ids": ["Todos los participantes deben existir y tener rol PARTICIPANT."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            spi = instantiate_subprocess(tpl, career, period, request.user, participants=participants)
+        except ValidationError as exc:
+            return Response({"detail": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
         return Response(SubProcessInstanceSerializer(spi).data, status=status.HTTP_201_CREATED)
 
 
@@ -87,17 +105,53 @@ class OperationInstanceView(viewsets.GenericViewSet,
     @action(detail=True, methods=["post"])
     def complete(self, request, pk=None):
         oi = self.get_object()
-        # marca todas las asignaciones del usuario como completadas
-        qs = oi.assignments.filter(user=request.user, status="PENDING")
-        qs.update(status="COMPLETED", completed_at=timezone.now())
-        return Response({"completed": qs.count()})
+        # marca las asignaciones del usuario y sincroniza operación/subproceso
+        completed = complete_user_assignments(oi, request.user)
+        return Response({"completed": completed})
 
 
 # ------ Documentos ------
 class DocumentView(viewsets.ModelViewSet):
-    queryset = Document.objects.select_related("operation_instance")
+    queryset = Document.objects.select_related(
+        "operation_instance__subprocess_instance__template__process__manager",
+        "operation_instance__operation_template",
+        "uploaded_by",
+    )
     serializer_class = DocumentSerializer
     http_method_names = ["get", "post", "delete"]
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        user = self.request.user
+        if user.role == User.Role.ADMIN:
+            return qs
+        if user.role == User.Role.MANAGER:
+            return qs.filter(
+                operation_instance__subprocess_instance__template__process__manager=user
+            )
+        return qs.filter(operation_instance__assignments__user=user).distinct()
+
+    def create(self, request, *args, **kwargs):
+        operation_instance = get_object_or_404(
+            OperationInstance,
+            pk=request.data.get("operation_instance"),
+        )
+        if not self._can_access_operation(operation_instance, request.user):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        if "file" not in request.FILES:
+            return Response({"file": ["Este campo es requerido."]}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            document = attach_document(operation_instance, request.user, request.FILES["file"])
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(DocumentSerializer(document).data, status=status.HTTP_201_CREATED)
+
+    def _can_access_operation(self, operation_instance, user):
+        if user.role == User.Role.ADMIN:
+            return True
+        if user.role == User.Role.MANAGER:
+            return operation_instance.subprocess_instance.template.process.manager_id == user.id
+        return operation_instance.assignments.filter(user=user).exists()
 
 
 # ------ Notificaciones ------
