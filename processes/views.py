@@ -1,6 +1,7 @@
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.core.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
 from .models import *
@@ -59,10 +60,27 @@ class SubProcessInstanceView(viewsets.ReadOnlyModelViewSet):
         """
         Body: {template_id, career_id, period_id}
         """
-        tpl = SubProcessTemplate.objects.get(pk=request.data["template_id"])
-        career = Career.objects.get(pk=request.data["career_id"])
-        period = AcademicPeriod.objects.get(pk=request.data["period_id"])
-        spi = instantiate_subprocess(tpl, career, period, request.user)
+        tpl = get_object_or_404(SubProcessTemplate, pk=request.data.get("template_id"))
+        if tpl.process.manager_id != request.user.id:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        career = get_object_or_404(Career, pk=request.data.get("career_id"))
+        period = get_object_or_404(AcademicPeriod, pk=request.data.get("period_id"))
+        participant_ids = request.data.get("participant_ids", []) or []
+        if isinstance(participant_ids, str):
+            participant_ids = [pk for pk in participant_ids.split(",") if pk]
+        elif isinstance(participant_ids, int):
+            participant_ids = [participant_ids]
+        participant_ids = list(participant_ids)
+        participants = list(User.objects.filter(id__in=participant_ids, role=User.Role.PARTICIPANT))
+        if len(participants) != len(set(participant_ids)):
+            return Response(
+                {"participant_ids": ["Todos los participantes deben existir y tener rol PARTICIPANT."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            spi = instantiate_subprocess(tpl, career, period, request.user, participants=participants)
+        except ValidationError as exc:
+            return Response({"detail": exc.messages}, status=status.HTTP_400_BAD_REQUEST)
         return Response(SubProcessInstanceSerializer(spi).data, status=status.HTTP_201_CREATED)
 
 

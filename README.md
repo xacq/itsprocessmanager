@@ -213,11 +213,11 @@ itsprocessmanager/
 ## 🔄 Flujo de Trabajo
 
 1. **Gestor** inicia un subproceso desde `/templates/<id>/start/`
-2. Selecciona carrera y período académico
+2. Selecciona carrera, período académico y participantes cuando la plantilla los requiere
 3. Sistema crea automáticamente:
    - SubProcessInstance
    - OperationInstances
-   - Asignaciones a participantes
+   - Asignaciones al gestor y a los participantes seleccionados
 4. **Participantes** ven sus operaciones en `/instances/`
 5. Cargan evidencias según el tipo de operación
 6. **Gestor** revisa y aprueba documentos

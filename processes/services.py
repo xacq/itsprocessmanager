@@ -1,4 +1,5 @@
 # processes/services.py
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
@@ -119,6 +120,10 @@ def instantiate_subprocess(
                 if actor_template.participant
                 else _users_for_role(actor_template.role, template, participants, creator)
             )
+            if actor_template.role == User.Role.PARTICIPANT and not target_users:
+                raise ValidationError(
+                    "Seleccione al menos un participante para iniciar este subproceso."
+                )
             for user in target_users:
                 OperationAssignment.objects.create(
                     operation_instance=operation_instance,

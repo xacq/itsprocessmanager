@@ -1,4 +1,5 @@
 # processes/views_ui.py
+from django.core.exceptions import ValidationError
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, ListView, DetailView, FormView
 from django.shortcuts import redirect, get_object_or_404
@@ -218,22 +219,48 @@ class NotificationListView(LoginRequiredMixin, ListView):
 
 class SubProcessTemplateStartView(LoginRequiredMixin, FormView):
     template_name = "templates/start.html"
-    form_class = SubProcessStartForm  # carrera + periodo
+    form_class = SubProcessStartForm  # carrera + periodo + participantes
+
+    def get_template_object(self):
+        return get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["template"] = self.get_template_object()
+        return kwargs
+
     def form_valid(self, form):
-        tpl = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
-        spi = instantiate_subprocess(tpl, form.cleaned_data["career"],
-                                          form.cleaned_data["period"],
-                                          self.request.user)
+        tpl = self.get_template_object()
+        try:
+            spi = instantiate_subprocess(
+                tpl,
+                form.cleaned_data["career"],
+                form.cleaned_data["period"],
+                self.request.user,
+                participants=list(form.cleaned_data["participants"]),
+            )
+        except ValidationError as exc:
+            form.add_error("participants", exc)
+            return self.form_invalid(form)
         return redirect("instance-detail", spi.pk)
+
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["template_obj"] = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        ctx["template_obj"] = self.get_template_object()
         return ctx
 
 
 class StartView(LoginRequiredMixin, FormView):
     template_name = "templates/start.html"
     form_class = SubProcessStartForm
+
+    def get_template_object(self):
+        return get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["template"] = self.get_template_object()
+        return kwargs
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.role != User.Role.MANAGER:
@@ -242,22 +269,27 @@ class StartView(LoginRequiredMixin, FormView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        tpl = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        tpl = self.get_template_object()
         if tpl.process.manager != self.request.user:
             messages.error(self.request, "No puedes iniciar subprocesos que no gestionas.")
             return redirect("dashboard")
-        spi = instantiate_subprocess(
-            tpl,
-            form.cleaned_data["career"],
-            form.cleaned_data["period"],
-            self.request.user,
-        )
+        try:
+            spi = instantiate_subprocess(
+                tpl,
+                form.cleaned_data["career"],
+                form.cleaned_data["period"],
+                self.request.user,
+                participants=list(form.cleaned_data["participants"]),
+            )
+        except ValidationError as exc:
+            form.add_error("participants", exc)
+            return self.form_invalid(form)
         messages.success(self.request, f"Subproceso #{spi.pk} creado.")
         return redirect("instance-detail", spi.pk)
     
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["template_obj"] = get_object_or_404(SubProcessTemplate, pk=self.kwargs["pk"])
+        ctx["template_obj"] = self.get_template_object()
         return ctx
     
 
