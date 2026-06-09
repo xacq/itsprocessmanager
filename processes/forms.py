@@ -25,6 +25,20 @@ class DocumentUploadForm(forms.ModelForm):
         self.helper.add_input(Submit("submit", "Subir archivo"))
 
 
+class DocumentRejectForm(forms.Form):
+    comment = forms.CharField(
+        label="Observación",
+        widget=forms.Textarea(attrs={"rows": 3}),
+        help_text="Explica qué debe corregir el participante.",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_method = "post"
+        self.helper.add_input(Submit("reject", "Rechazar documento"))
+
+
 class SubProcessStartForm(forms.Form):
     career = forms.ModelChoiceField(queryset=Career.objects.all(), label="Carrera")
     period = forms.ModelChoiceField(queryset=AcademicPeriod.objects.all(), label="Período académico")

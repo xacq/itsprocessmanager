@@ -1,4 +1,7 @@
 # processes/services.py
+from pathlib import Path
+
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
@@ -50,6 +53,28 @@ def _notify_manager(operation_instance, assignment=None):
         message=message,
         related_assignment=assignment,
     )
+
+
+def _notify_users(users, message):
+    """Crea notificaciones simples para usuarios únicos."""
+    seen = set()
+    for user in users:
+        if user and user.pk not in seen:
+            Notification.objects.create(user=user, message=message)
+            seen.add(user.pk)
+
+
+def _validate_document_file(uploaded_file):
+    """Valida tamaño y extensión permitida para evidencias/documentos."""
+    max_size = getattr(settings, "MAX_DOCUMENT_UPLOAD_SIZE", 5 * 1024 * 1024)
+    if uploaded_file.size > max_size:
+        raise ValueError("El archivo supera el tamaño máximo permitido.")
+
+    allowed_extensions = getattr(settings, "ALLOWED_DOCUMENT_EXTENSIONS", set())
+    extension = Path(uploaded_file.name).suffix.lower()
+    if allowed_extensions and extension not in allowed_extensions:
+        allowed = ", ".join(sorted(allowed_extensions))
+        raise ValueError(f"Tipo de archivo no permitido. Extensiones válidas: {allowed}.")
 
 
 def refresh_operation_progress(operation_instance, assignment=None):
@@ -160,8 +185,13 @@ def approve_operation(operation_instance, approved_by):
     now = timezone.now()
     Document.objects.filter(
         operation_instance=operation_instance,
-        approved_at__isnull=True,
-    ).update(approved_by=approved_by, approved_at=now)
+        status=Document.Status.PENDING,
+    ).update(
+        status=Document.Status.APPROVED,
+        approved_by=approved_by,
+        approved_at=now,
+        review_comment="",
+    )
 
     assignments = list(
         operation_instance.assignments.select_for_update().filter(status="PENDING")
@@ -191,11 +221,56 @@ def approve_operation(operation_instance, approved_by):
 
 
 @transaction.atomic
+def reject_operation_documents(operation_instance, rejected_by, comment):
+    """Rechaza documentos pendientes y notifica a los usuarios que deben corregirlos."""
+    comment = (comment or "").strip()
+    if not comment:
+        raise ValueError("Ingrese una observación para rechazar el documento.")
+
+    pending_documents = list(
+        Document.objects.select_for_update().filter(
+            operation_instance=operation_instance,
+            status=Document.Status.PENDING,
+        )
+    )
+    if not pending_documents:
+        raise ValueError("No hay documentos pendientes para rechazar.")
+
+    now = timezone.now()
+    for document in pending_documents:
+        document.status = Document.Status.REJECTED
+        document.approved_by = rejected_by
+        document.approved_at = now
+        document.review_comment = comment
+        document.save(update_fields=["status", "approved_by", "approved_at", "review_comment"])
+
+    operation_instance.state = "PENDING"
+    operation_instance.save(update_fields=["state"])
+
+    uploaders = [document.uploaded_by for document in pending_documents]
+    _notify_users(
+        uploaders,
+        f"Documento rechazado en la operación «{operation_instance}»: {comment}",
+    )
+    return pending_documents
+
+
+@transaction.atomic
 def attach_document(operation_instance, uploaded_by, uploaded_file):
     """Adjunta un documento usando el storage_type definido en la plantilla."""
     storage_type = operation_instance.operation_template.storage_type
     if not storage_type:
         raise ValueError("La operación no tiene un tipo de almacenamiento configurado.")
+    _validate_document_file(uploaded_file)
+
+    replaced_document = (
+        operation_instance.documents.filter(
+            uploaded_by=uploaded_by,
+            status__in=[Document.Status.PENDING, Document.Status.REJECTED],
+        )
+        .order_by("-uploaded_at", "-id")
+        .first()
+    )
 
     return Document.objects.create(
         operation_instance=operation_instance,

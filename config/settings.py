@@ -190,3 +190,7 @@ REST_FRAMEWORK.update({
 CRON_CLASSES = [
     "processes.task.CheckOverdueOps",
 ]
+
+
+MAX_DOCUMENT_UPLOAD_SIZE = int(os.getenv("MAX_DOCUMENT_UPLOAD_SIZE", 5 * 1024 * 1024))
+ALLOWED_DOCUMENT_EXTENSIONS = {".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png"}

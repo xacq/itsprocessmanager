@@ -1,11 +1,13 @@
 import tempfile
 
 from django.contrib import admin
+from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import RequestFactory, TestCase, override_settings
 
 from .admin import ProcessAdmin, UserAdmin
 from .models import (
+    Document,
     AcademicPeriod,
     Career,
     MacroProcess,
@@ -19,7 +21,13 @@ from .models import (
     SubProcessTemplate,
     User,
 )
-from .services import attach_document, complete_user_assignments, instantiate_subprocess
+from .services import (
+    approve_operation,
+    attach_document,
+    complete_user_assignments,
+    instantiate_subprocess,
+    reject_operation_documents,
+)
 from .views_ui import OperationListView
 
 
@@ -159,6 +167,74 @@ class ProcessWorkflowTests(TestCase):
 
         self.assertEqual(document.storage_type, self.storage_type)
         self.assertEqual(document.uploaded_by, self.participant)
+
+
+    def test_reject_document_records_observation_and_replacement(self):
+        spi = instantiate_subprocess(
+            self.template,
+            self.career,
+            self.period,
+            self.manager,
+            participants=[self.participant],
+        )
+        operation_instance = spi.operation_instances.get()
+        first_file = SimpleUploadedFile("solicitud.pdf", b"contenido", content_type="application/pdf")
+        first_document = attach_document(operation_instance, self.participant, first_file)
+
+        reject_operation_documents(operation_instance, self.manager, "Debe corregir la firma.")
+        first_document.refresh_from_db()
+
+        self.assertEqual(first_document.status, Document.Status.REJECTED)
+        self.assertEqual(first_document.review_comment, "Debe corregir la firma.")
+        self.assertEqual(self.participant.notifications.count(), 1)
+
+        corrected_file = SimpleUploadedFile("solicitud_corregida.pdf", b"ok", content_type="application/pdf")
+        replacement = attach_document(operation_instance, self.participant, corrected_file)
+
+        self.assertEqual(replacement.status, Document.Status.PENDING)
+        self.assertEqual(replacement.replaced_document, first_document)
+
+    def test_approve_operation_marks_documents_approved(self):
+        spi = instantiate_subprocess(
+            self.template,
+            self.career,
+            self.period,
+            self.manager,
+            participants=[self.participant],
+        )
+        operation_instance = spi.operation_instances.get()
+        uploaded = SimpleUploadedFile("solicitud.pdf", b"contenido", content_type="application/pdf")
+        document = attach_document(operation_instance, self.participant, uploaded)
+
+        approve_operation(operation_instance, self.manager)
+        document.refresh_from_db()
+        operation_instance.refresh_from_db()
+
+        self.assertEqual(document.status, Document.Status.APPROVED)
+        self.assertEqual(document.approved_by, self.manager)
+        self.assertEqual(operation_instance.state, "COMPLETED")
+
+    def test_attach_document_rejects_invalid_extension(self):
+        spi = instantiate_subprocess(
+            self.template,
+            self.career,
+            self.period,
+            self.manager,
+            participants=[self.participant],
+        )
+        operation_instance = spi.operation_instances.get()
+        uploaded = SimpleUploadedFile("malware.exe", b"contenido", content_type="application/octet-stream")
+
+        with self.assertRaises(ValueError):
+            attach_document(operation_instance, self.participant, uploaded)
+
+    def test_process_manager_must_have_manager_role(self):
+        with self.assertRaises(ValidationError):
+            Process.objects.create(
+                macro_process=self.macro,
+                name="Proceso inválido",
+                manager=self.participant,
+            )
 
     def test_participant_operation_list_shows_only_assigned_operations(self):
         own_spi = instantiate_subprocess(
