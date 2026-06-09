@@ -77,6 +77,26 @@ class SubProcessTemplateListView(LoginRequiredMixin, ListView):
         return SubProcessTemplate.objects.filter(process__manager=self.request.user)
 
 
+class OperationListView(LoginRequiredMixin, ListView):
+    model = OperationInstance
+    template_name = "operations/list.html"
+    paginate_by = 15
+
+    def get_queryset(self):
+        qs = OperationInstance.objects.select_related(
+            "subprocess_instance__template__process__manager",
+            "subprocess_instance__career",
+            "subprocess_instance__period",
+            "operation_template",
+        )
+        user = self.request.user
+        if user.role == User.Role.ADMIN:
+            return qs
+        if user.role == User.Role.MANAGER:
+            return qs.filter(subprocess_instance__template__process__manager=user)
+        return qs.filter(assignments__user=user).distinct()
+
+
 class OperationDetailView(LoginRequiredMixin, FormView, DetailView):
     model = OperationInstance
     template_name = "operations/detail.html"
