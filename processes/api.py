@@ -14,7 +14,12 @@ from .models import (
 )
 from .permissions import IsManager
 from .serializers import OperationInstanceSerializer, SubProcessInstanceSerializer
-from .services import complete_user_assignments, instantiate_subprocess
+from .services import (
+    approve_operation,
+    complete_user_assignments,
+    instantiate_subprocess,
+    reject_operation_documents,
+)
 
 
 class SPIView(viewsets.ReadOnlyModelViewSet):
@@ -116,3 +121,26 @@ class OperationInstanceViewSet(viewsets.ReadOnlyModelViewSet):
         operation_instance = self.get_object()
         completed = complete_user_assignments(operation_instance, request.user)
         return Response({"completed": completed})
+
+    @action(detail=True, methods=["post"])
+    def approve(self, request, pk=None):
+        operation_instance = self.get_object()
+        if request.user.role not in (User.Role.ADMIN, User.Role.MANAGER):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        approve_operation(operation_instance, request.user)
+        return Response({"approved": True})
+
+    @action(detail=True, methods=["post"])
+    def reject(self, request, pk=None):
+        operation_instance = self.get_object()
+        if request.user.role not in (User.Role.ADMIN, User.Role.MANAGER):
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        try:
+            rejected = reject_operation_documents(
+                operation_instance,
+                request.user,
+                request.data.get("comment", ""),
+            )
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"rejected": len(rejected)})
